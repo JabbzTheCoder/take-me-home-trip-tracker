@@ -2,9 +2,16 @@
 import React from 'react';
 
 export default function StatusBadge({ status, className = '' }) {
-  const isDone = status === 'completed';
+  if (status === 'deferred') {
+    return (
+      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30 tracking-wide shadow-sm shadow-purple-500/10 ${className}`}>
+        <span className="text-[11px] shrink-0">⏸</span>
+        <span>Deferred</span>
+      </span>
+    );
+  }
 
-  if (isDone) {
+  if (status === 'completed') {
     return (
       <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 tracking-wide shadow-sm shadow-emerald-500/10 ${className}`}>
         <svg className="w-3.5 h-3.5 text-emerald-400 shrink-0" viewBox="0 0 16 16" fill="currentColor">

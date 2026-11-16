@@ -12,10 +12,13 @@
     "chaseCar": "VW Polo (GP 884-POL)",
     "fare": 450,
     "status": "completed",
-    "notes": "Client vehicle safely parked in garage. Handed keys to security at entrance. Escort car followed all the way.",
+    "notes": "Updated by attached driver Jabbz - test note",
     "date": "2026-11-16",
     "time": "01:15",
-    "createdAt": "2026-11-16T01:15:00.000Z"
+    "createdAt": "2026-11-16T01:15:00.000Z",
+    "deferReason": "Client postponed due to thunderstorm",
+    "deferredAt": "2026-11-16T20:25:02.958Z",
+    "deferredBy": "Jabbz"
   },
   {
     "_id": "trp-202",

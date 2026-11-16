@@ -48,13 +48,15 @@ function TripFilters({
   const chauffeurCount = trips.filter(t => t.type === 'chauffeur').length;
   const transitCount = trips.filter(t => t.status === 'in_progress').length;
   const completedCount = trips.filter(t => t.status === 'completed').length;
+  const deferredCount = trips.filter(t => t.status === 'deferred').length;
 
   const tabs = [
     { id: 'all', label: 'All Trips', count: total },
     { id: 'take_me_home', label: '🚗 Take Me Home', count: tmhCount },
     { id: 'chauffeur', label: '🎩 Chauffeur', count: chauffeurCount },
     { id: 'in_progress', label: '● In Transit', count: transitCount },
-    { id: 'completed', label: '✓ Completed', count: completedCount }
+    { id: 'completed', label: '✓ Completed', count: completedCount },
+    { id: 'deferred', label: '⏸ Deferred', count: deferredCount }
   ];
 
   return (

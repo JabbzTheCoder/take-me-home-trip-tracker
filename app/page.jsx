@@ -16,7 +16,7 @@ import PopiaModal from '@/components/modals/PopiaModal';
 import ChangePasswordModal from '@/components/modals/ChangePasswordModal';
 import AuthScreen from '@/components/auth/AuthScreen';
 import MandatoryPasswordChange from '@/components/auth/MandatoryPasswordChange';
-import { printTripVoucher } from '@/lib/voucher';
+import { printTaxInvoice } from '@/lib/invoice';
 
 export default function Home() {
   // Authentication & User State
@@ -264,10 +264,10 @@ export default function Home() {
     setActiveModal('log-trip');
   }, []);
 
-  // Trips: Toggle Status (In Progress <-> Completed)
-  const handleToggleTripStatus = useCallback(async (trip) => {
+  // Trips: Toggle Status (In Progress <-> Completed <-> Deferred)
+  const handleToggleTripStatus = useCallback(async (trip, explicitStatus) => {
     const tripId = trip._id || trip.id;
-    const newStatus = trip.status === 'completed' ? 'in_progress' : 'completed';
+    const newStatus = explicitStatus || (trip.status === 'completed' ? 'in_progress' : 'completed');
 
     try {
       const res = await fetch(`/api/trips/${tripId}`, {
@@ -280,11 +280,11 @@ export default function Home() {
       });
       const data = await res.json();
 
-      if (data.success) {
-        const label = newStatus === 'completed' ? 'Completed' : 'In Transit';
-        showToast(`Trip marked as ${label}`);
-        setTrips(prev => prev.map(t => (t._id || t.id) === tripId ? { ...t, status: newStatus } : t));
-        setSelectedTrip(prev => (prev && (prev._id || prev.id) === tripId ? { ...prev, status: newStatus } : prev));
+      if (data.success && data.trip) {
+        const label = newStatus === 'completed' ? 'Completed' : (newStatus === 'deferred' ? 'Deferred' : 'In Transit');
+        showToast(`Trip marked as ${label} (Email alert dispatched)`);
+        setTrips(prev => prev.map(t => (t._id || t.id) === tripId ? data.trip : t));
+        setSelectedTrip(data.trip);
       } else {
         showToast(data.message || 'Failed to update trip status', 'error');
       }
@@ -306,10 +306,10 @@ export default function Home() {
       });
       const data = await res.json();
 
-      if (data.success) {
-        showToast('Trip notes updated!');
-        setTrips(prev => prev.map(t => (t._id || t.id) === tripId ? { ...t, notes: notesText } : t));
-        setSelectedTrip(prev => (prev && (prev._id || prev.id) === tripId ? { ...prev, notes: notesText } : prev));
+      if (data.success && data.trip) {
+        showToast('Trip notes updated (Audit email sent to drivers)!');
+        setTrips(prev => prev.map(t => (t._id || t.id) === tripId ? data.trip : t));
+        setSelectedTrip(data.trip);
         return true;
       } else {
         showToast(data.message || 'Failed to save notes', 'error');
@@ -321,27 +321,35 @@ export default function Home() {
     }
   }, [token, showToast]);
 
-  // Trips: Delete Trip
-  const handleDeleteTrip = useCallback(async (tripId) => {
-    if (!window.confirm('Are you sure you want to permanently delete this trip record?')) return;
-
+  // Trips: Defer Trip with Reason (Prohibits Hard Deletion)
+  const handleDeferTrip = useCallback(async (trip, reason) => {
+    const tripId = trip._id || trip.id;
     try {
       const res = await fetch(`/api/trips/${tripId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          status: 'deferred',
+          deferReason: reason
+        })
       });
       const data = await res.json();
 
-      if (data.success) {
-        showToast('Trip record deleted');
-        setTrips(prev => prev.filter(t => (t._id || t.id) !== tripId));
-        setActiveModal(null);
-        setSelectedTrip(null);
+      if (data.success && data.trip) {
+        showToast('Trip marked as Deferred (Email alert sent to assigned drivers)');
+        setTrips(prev => prev.map(t => (t._id || t.id) === tripId ? data.trip : t));
+        setSelectedTrip(data.trip);
+        return true;
       } else {
-        showToast(data.message || 'Failed to delete trip', 'error');
+        showToast(data.message || 'Failed to defer trip', 'error');
+        return false;
       }
     } catch (err) {
-      showToast('Failed to delete trip record', 'error');
+      showToast('Error deferring trip', 'error');
+      return false;
     }
   }, [token, showToast]);
 
@@ -422,11 +430,11 @@ export default function Home() {
     }
   }, [token, showToast]);
 
-  // Trips: Print A4 Voucher
-  const handlePrintVoucher = useCallback((trip) => {
+  // Trips: Print Official Tax Invoice
+  const handlePrintInvoice = useCallback((trip) => {
     const target = trip || selectedTrip;
     if (!target) return;
-    printTripVoucher(target);
+    printTaxInvoice(target);
   }, [selectedTrip]);
 
   // Filtered & Searched Trips
@@ -437,6 +445,7 @@ export default function Home() {
       if (filter === 'chauffeur' && trip.type !== 'chauffeur') return false;
       if (filter === 'in_progress' && trip.status !== 'in_progress') return false;
       if (filter === 'completed' && trip.status !== 'completed') return false;
+      if (filter === 'deferred' && trip.status !== 'deferred') return false;
 
       // 2. Search Query Filter
       if (searchQuery.trim()) {
@@ -449,6 +458,7 @@ export default function Home() {
         const chaseCar = (trip.chaseCar || '').toLowerCase();
         const leadDriver = (trip.clientDriverName || trip.driverName || '').toLowerCase();
         const chaseDriver = (trip.chaseDriverName || '').toLowerCase();
+        const deferReason = (trip.deferReason || '').toLowerCase();
 
         return (
           client.includes(q) ||
@@ -458,7 +468,8 @@ export default function Home() {
           car.includes(q) ||
           chaseCar.includes(q) ||
           leadDriver.includes(q) ||
-          chaseDriver.includes(q)
+          chaseDriver.includes(q) ||
+          deferReason.includes(q)
         );
       }
 
@@ -531,8 +542,9 @@ export default function Home() {
         trips={filteredTrips}
         filter={filter}
         searchQuery={searchQuery}
+        currentUser={user}
         onSelectTrip={handleSelectTrip}
-        onPrintVoucher={handlePrintVoucher}
+        onPrintVoucher={handlePrintInvoice}
         onToggleStatus={handleToggleTripStatus}
         onOpenLogModal={handleOpenLogModal}
       />
@@ -543,10 +555,11 @@ export default function Home() {
       {/* 6. Modular Dialogs & Overlays */}
       <TripDetailModal
         trip={selectedTrip}
+        currentUser={user}
         onClose={handleCloseDetailModal}
-        onPrintVoucher={handlePrintVoucher}
+        onPrintInvoice={handlePrintInvoice}
         onToggleStatus={handleToggleTripStatus}
-        onDeleteTrip={handleDeleteTrip}
+        onDeferTrip={handleDeferTrip}
         onSaveNotes={handleSaveNotes}
       />
 

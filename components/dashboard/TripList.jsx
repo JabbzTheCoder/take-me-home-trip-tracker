@@ -6,6 +6,7 @@ function TripList({
   trips = [],
   filter = 'all',
   searchQuery = '',
+  currentUser,
   onSelectTrip,
   onPrintVoucher,
   onToggleStatus,
@@ -38,6 +39,7 @@ function TripList({
         <TripCard
           key={trip._id || trip.id}
           trip={trip}
+          currentUser={currentUser}
           onSelect={onSelectTrip}
           onPrintVoucher={onPrintVoucher}
           onToggleStatus={onToggleStatus}
