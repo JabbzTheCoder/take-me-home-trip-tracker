@@ -322,7 +322,7 @@ export default function Home() {
     const reader = new FileReader();
     reader.onload = (event) => {
       setProfilePicBase64(event.target.result);
-      showToast('Photo loaded! Remember to click Save.');
+      showToast('Photo loaded! Click Save to apply.');
     };
     reader.readAsDataURL(file);
   };
@@ -929,7 +929,6 @@ export default function Home() {
               e.preventDefault();
               setAuthLoading(true);
               try {
-                // Register driver through backend
                 const res = await fetch('/api/auth/profile', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
@@ -1080,9 +1079,9 @@ export default function Home() {
     );
   }
 
-  // 4. Main Authenticated Dashboard Screen
+  // 4. Main Authenticated Dashboard Screen (RESPONSIVE TO ALL SCREEN SIZES)
   return (
-    <div className="mobile-dashboard animate-fade-in flex flex-col gap-4 p-3 sm:p-4 pb-24">
+    <div className="mobile-dashboard animate-fade-in flex flex-col gap-5 p-4 sm:p-6 lg:p-8 pb-28">
       {/* Toast Notifications (Pops at the top) */}
       <div id="toast-container" className="fixed top-5 left-4 right-4 z-50 flex flex-col items-center gap-2 pointer-events-none">
         {toasts.map(t => (
@@ -1096,12 +1095,12 @@ export default function Home() {
       </div>
 
       {/* =========================================================================
-          AUTHENTIC TOP BAR (CLEAN, UNCLUTTERED, PROFESSIONAL & MODERN)
+          RESPONSIVE TOP BAR (MOBILE & PC)
           ========================================================================= */}
-      <header className="mobile-top-bar flex items-center justify-between pb-3.5 border-b border-white/10 relative">
+      <header className="mobile-top-bar flex items-center justify-between pb-4 border-b border-white/10 relative">
         {/* User Profile (Tap to Edit) */}
         <div
-          className="user-profile-badge flex items-center gap-3 cursor-pointer p-1 rounded-xl hover:bg-white/5 transition-all select-none"
+          className="user-profile-badge flex items-center gap-3.5 cursor-pointer p-1.5 rounded-2xl hover:bg-white/5 active:scale-95 transition-all select-none"
           onClick={() => {
             initProfileForm(user);
             setActiveModal('profile');
@@ -1109,10 +1108,14 @@ export default function Home() {
           title="Tap to update profile, email, phone & picture"
         >
           {user?.profilePic ? (
-            <img src={user.profilePic} alt={user.name} className="user-avatar-img w-11 h-11 rounded-full object-cover border-2 border-cyan-400 shadow-md shadow-cyan-500/20" />
+            <img
+              src={user.profilePic}
+              alt={user.name}
+              className="user-avatar-img w-12 h-12 rounded-full object-cover border-2 border-cyan-400 shadow-lg shadow-cyan-500/25 ring-2 ring-cyan-500/20"
+            />
           ) : (
             <span
-              className="user-avatar w-11 h-11 rounded-full font-black text-lg flex items-center justify-center text-slate-900 shadow-md"
+              className="user-avatar w-12 h-12 rounded-full font-black text-lg flex items-center justify-center text-slate-950 shadow-lg"
               style={{ background: user?.avatarColor || '#38bdf8' }}
             >
               {user ? user.name.charAt(0).toUpperCase() : 'J'}
@@ -1120,7 +1123,7 @@ export default function Home() {
           )}
           <div className="user-names flex flex-col">
             <div className="user-name-title-row flex items-center gap-2">
-              <span className="greeting-name font-black text-lg text-white tracking-tight">{user ? user.name : 'Driver'}</span>
+              <span className="greeting-name font-black text-lg sm:text-xl text-white tracking-tight">{user ? user.name : 'Driver'}</span>
               <span className="admin-badge-mini uppercase text-[10px] font-black tracking-wider px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
                 Admin
               </span>
@@ -1133,18 +1136,19 @@ export default function Home() {
         </div>
 
         {/* Action Controls: Fleet & Menu */}
-        <div className="top-bar-actions flex items-center gap-2" ref={menuRef}>
+        <div className="top-bar-actions flex items-center gap-2.5" ref={menuRef}>
           <button
             type="button"
-            className="btn-manage-cars flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-cyan-500/15 border border-cyan-500/35 text-cyan-400 text-xs font-bold hover:scale-105 active:scale-95 transition-transform"
+            className="btn-manage-cars flex items-center gap-2 px-3.5 py-2 rounded-full bg-cyan-500/15 border border-cyan-500/40 text-cyan-400 text-xs font-bold hover:bg-cyan-500/25 hover:scale-105 active:scale-95 transition-all shadow-sm"
             onClick={() => setActiveModal('cars')}
             title="Manage Fleet (Polo, Fiesta, i20)"
           >
-            <span>🚗 Fleet</span>
+            <span className="text-sm">🚗</span>
+            <span>Fleet</span>
           </button>
           <button
             type="button"
-            className="btn-menu-icon w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-base hover:bg-white/10 hover:rotate-30 active:scale-90 transition-all"
+            className="btn-menu-icon w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-lg hover:bg-white/15 hover:rotate-30 active:scale-90 transition-all shadow-sm"
             onClick={() => setSystemMenuOpen(prev => !prev)}
             title="Menu & Settings"
           >
@@ -1153,9 +1157,9 @@ export default function Home() {
 
           {/* DROPDOWN QUICK MENU */}
           {systemMenuOpen && (
-            <div id="quick-system-menu" className="system-menu-dropdown absolute top-14 right-0 w-64 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl p-2 shadow-2xl z-50 flex flex-col gap-1 animate-in fade-in zoom-in-95 duration-150">
+            <div id="quick-system-menu" className="system-menu-dropdown absolute top-16 right-0 w-64 bg-slate-900/98 backdrop-blur-2xl border border-white/15 rounded-2xl p-2 shadow-2xl z-50 flex flex-col gap-1 animate-in fade-in zoom-in-95 duration-150">
               <div
-                className="menu-item flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/5 cursor-pointer transition-colors"
+                className="menu-item flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/10 cursor-pointer transition-colors"
                 onClick={() => {
                   initProfileForm(user);
                   setActiveModal('profile');
@@ -1170,7 +1174,7 @@ export default function Home() {
               </div>
 
               <div
-                className="menu-item flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/5 cursor-pointer transition-colors"
+                className="menu-item flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/10 cursor-pointer transition-colors"
                 onClick={() => {
                   setActiveModal('cars');
                   setSystemMenuOpen(false);
@@ -1184,7 +1188,7 @@ export default function Home() {
               </div>
 
               <div
-                className="menu-item flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/5 cursor-pointer transition-colors"
+                className="menu-item flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/10 cursor-pointer transition-colors"
                 onClick={() => {
                   setActiveModal('popia');
                   setSystemMenuOpen(false);
@@ -1198,7 +1202,7 @@ export default function Home() {
               </div>
 
               <div
-                className="menu-item flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/5 cursor-pointer transition-colors"
+                className="menu-item flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/10 cursor-pointer transition-colors"
                 onClick={() => {
                   setActiveModal('change_password');
                   setSystemMenuOpen(false);
@@ -1214,7 +1218,7 @@ export default function Home() {
               <div className="menu-divider h-px bg-white/10 my-1"></div>
 
               <div
-                className="menu-item menu-logout flex items-center gap-3 p-2.5 rounded-xl hover:bg-rose-500/15 cursor-pointer transition-colors"
+                className="menu-item menu-logout flex items-center gap-3 p-2.5 rounded-xl hover:bg-rose-500/20 cursor-pointer transition-colors"
                 onClick={handleLogout}
               >
                 <span className="menu-icon text-lg">🚪</span>
@@ -1228,60 +1232,63 @@ export default function Home() {
         </div>
       </header>
 
-      {/* QUICK STATS TILES */}
-      <section className="mobile-stats-row grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-        <div className="stat-tile flex flex-col items-center justify-center p-3 rounded-2xl bg-slate-900/60 border border-white/5 text-center">
-          <span className="stat-count text-2xl font-black text-white">{totalTrips}</span>
+      {/* QUICK STATS TILES (RESPONSIVE 2X2 ON MOBILE, 4 TILES HORIZONTAL ON DESKTOP) */}
+      <section className="mobile-stats-row grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="stat-tile flex flex-col items-center justify-center p-3.5 sm:p-4 rounded-2xl bg-slate-900/70 border border-white/5 text-center hover:border-slate-600 transition-colors">
+          <span className="stat-count text-2xl sm:text-3xl font-black text-white">{totalTrips}</span>
           <span className="stat-name text-xs text-slate-400 font-bold mt-1 uppercase tracking-wider">All Trips</span>
         </div>
 
-        <div className="stat-tile tile-gold flex flex-col items-center justify-center p-3 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-center">
-          <span className="stat-count text-2xl font-black text-amber-400">{takeMeHomeCount}</span>
-          <span className="stat-name text-xs text-amber-200/80 font-bold mt-1">Take Me Home<br /><small className="text-[10px] opacity-80">(2 Drivers)</small></span>
+        <div className="stat-tile tile-gold flex flex-col items-center justify-center p-3.5 sm:p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-center hover:border-amber-400 transition-colors">
+          <span className="stat-count text-2xl sm:text-3xl font-black text-amber-400">{takeMeHomeCount}</span>
+          <span className="stat-name text-xs text-amber-200/90 font-bold mt-1">Take Me Home<br /><small className="text-[10px] opacity-80">(2 Drivers)</small></span>
         </div>
 
-        <div className="stat-tile tile-cyan flex flex-col items-center justify-center p-3 rounded-2xl bg-cyan-500/10 border border-cyan-500/25 text-center">
-          <span className="stat-count text-2xl font-black text-cyan-400">{chauffeurCount}</span>
-          <span className="stat-name text-xs text-cyan-200/80 font-bold mt-1">Chauffeur<br /><small className="text-[10px] opacity-80">(1 Driver)</small></span>
+        <div className="stat-tile tile-cyan flex flex-col items-center justify-center p-3.5 sm:p-4 rounded-2xl bg-cyan-500/10 border border-cyan-500/25 text-center hover:border-cyan-400 transition-colors">
+          <span className="stat-count text-2xl sm:text-3xl font-black text-cyan-400">{chauffeurCount}</span>
+          <span className="stat-name text-xs text-cyan-200/90 font-bold mt-1">Chauffeur<br /><small className="text-[10px] opacity-80">(1 Driver)</small></span>
         </div>
 
-        <div className="stat-tile tile-emerald flex flex-col items-center justify-center p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-center">
-          <span className="stat-count text-xl sm:text-2xl font-black text-emerald-400">{formatCurrency(totalEarnings)}</span>
-          <span className="stat-name text-xs text-emerald-200/80 font-bold mt-1 uppercase tracking-wider">Total Fares</span>
+        <div className="stat-tile tile-emerald flex flex-col items-center justify-center p-3.5 sm:p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-center hover:border-emerald-400 transition-colors">
+          <span className="stat-count text-xl sm:text-2xl font-black font-mono text-emerald-400">{formatCurrency(totalEarnings)}</span>
+          <span className="stat-name text-xs text-emerald-200/90 font-bold mt-1 uppercase tracking-wider">Total Fares</span>
         </div>
       </section>
 
       {/* FILTER TABS */}
-      <div className="mobile-filter-tabs flex gap-2 overflow-x-auto pb-1">
+      <div className="mobile-filter-tabs flex gap-2.5 overflow-x-auto pb-1">
         <button
-          className={`filter-tab ${filter === 'all' ? 'active' : ''} px-4 py-2 rounded-xl text-xs font-black tracking-wide whitespace-nowrap transition-all`}
+          className={`filter-tab ${filter === 'all' ? 'active' : ''} px-4 py-2 rounded-xl text-xs font-black tracking-wide whitespace-nowrap transition-all flex items-center gap-2`}
           onClick={() => setFilter('all')}
         >
-          All ({totalTrips})
+          <span>All Trips</span>
+          <span className="px-2 py-0.5 rounded-full text-[10px] bg-white/10">{totalTrips}</span>
         </button>
         <button
-          className={`filter-tab ${filter === 'take_me_home' ? 'active' : ''} px-4 py-2 rounded-xl text-xs font-black tracking-wide whitespace-nowrap transition-all`}
+          className={`filter-tab ${filter === 'take_me_home' ? 'active' : ''} px-4 py-2 rounded-xl text-xs font-black tracking-wide whitespace-nowrap transition-all flex items-center gap-2`}
           onClick={() => setFilter('take_me_home')}
         >
-          🚗 Take Me Home ({takeMeHomeCount})
+          <span>🚗 Take Me Home</span>
+          <span className="px-2 py-0.5 rounded-full text-[10px] bg-amber-500/20 text-amber-300">{takeMeHomeCount}</span>
         </button>
         <button
-          className={`filter-tab ${filter === 'chauffeur' ? 'active' : ''} px-4 py-2 rounded-xl text-xs font-black tracking-wide whitespace-nowrap transition-all`}
+          className={`filter-tab ${filter === 'chauffeur' ? 'active' : ''} px-4 py-2 rounded-xl text-xs font-black tracking-wide whitespace-nowrap transition-all flex items-center gap-2`}
           onClick={() => setFilter('chauffeur')}
         >
-          🎩 Chauffeur ({chauffeurCount})
+          <span>🎩 Chauffeur</span>
+          <span className="px-2 py-0.5 rounded-full text-[10px] bg-cyan-500/20 text-cyan-300">{chauffeurCount}</span>
         </button>
       </div>
 
       {/* =========================================================================
-          COMPACT, CLEAN TRIP LIST (TAP ANY CARD FOR FULL DETAILS)
+          DECLUTTERED TRIP CARDS (RESPONSIVE GRID: 1 COL MOBILE, 2/3 COLS ON PC)
           ========================================================================= */}
-      <section className="mobile-trip-list flex flex-col gap-3">
+      <section className="mobile-trip-list grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5 sm:gap-4">
         {filteredTrips.length === 0 ? (
-          <div className="mobile-empty-card p-8 rounded-2xl bg-slate-900/60 border border-dashed border-white/10 text-center flex flex-col items-center gap-3">
+          <div className="mobile-empty-card col-span-full p-8 rounded-3xl bg-slate-900/60 border border-dashed border-white/15 text-center flex flex-col items-center gap-3">
             <p className="text-slate-400 font-medium">No {filter === 'all' ? '' : filter.replace('_', ' ')} trips found in database.</p>
             <button
-              className="btn btn-gold btn-sm px-4 py-2 rounded-xl font-bold"
+              className="btn btn-gold btn-sm px-5 py-2.5 rounded-xl font-bold hover:scale-105 active:scale-95 transition-transform"
               onClick={() => setActiveModal('log_trip')}
             >
               + Log First Trip
@@ -1291,11 +1298,16 @@ export default function Home() {
           filteredTrips.map(trip => {
             const isTakeMeHome = trip.type === 'take_me_home';
             const tripId = trip._id || trip.id;
+            const isDone = trip.status === 'completed';
 
             return (
               <article
                 key={tripId}
-                className={`compact-trip-card hover:border-cyan-500/40 hover:shadow-xl hover:shadow-cyan-500/10 active:scale-[0.985] transition-all cursor-pointer ${trip.status === 'in_progress' ? 'card-transit' : ''}`}
+                className={`compact-trip-card bg-slate-900/75 backdrop-blur-xl border rounded-2xl p-4 flex flex-col gap-3 transition-all duration-200 cursor-pointer relative overflow-hidden group select-none hover:shadow-xl hover:shadow-black/40 ${
+                  isDone 
+                    ? 'border-white/10 hover:border-emerald-500/40 hover:bg-slate-900/90' 
+                    : 'border-amber-500/30 bg-gradient-to-br from-slate-900/90 via-slate-900/80 to-amber-950/20 hover:border-amber-400/50 shadow-lg shadow-amber-500/5'
+                }`}
                 onClick={() => {
                   setSelectedTrip(trip);
                   setDetailNotesText(trip.notes || '');
@@ -1303,50 +1315,133 @@ export default function Home() {
                   setActiveModal('trip_detail');
                 }}
               >
-                {/* Card Header: Type Badge & Status */}
-                <div className="compact-card-header flex items-center justify-between">
-                  <div className={`compact-type-badge ${isTakeMeHome ? 'type-tmh' : 'type-chauffeur'}`}>
-                    {isTakeMeHome ? '🚗 Take Me Home (2 Drivers)' : '🎩 Chauffeur (1 Driver)'}
-                  </div>
-                  <div className="compact-card-meta flex items-center gap-2">
-                    <span className={`status-badge status-${trip.status}`}>
-                      {trip.status === 'in_progress' ? '● On Road' : '✓ Done'}
+                {/* 1. Header: Service Chip, Status Pill, Timestamp */}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[11px] font-extrabold px-2.5 py-0.5 rounded-lg uppercase tracking-wider ${
+                      isTakeMeHome
+                        ? 'bg-amber-400/10 text-amber-300 border border-amber-400/25'
+                        : 'bg-cyan-400/10 text-cyan-300 border border-cyan-400/25'
+                    }`}>
+                      {isTakeMeHome ? '🚗 Take Me Home' : '🎩 Chauffeur'}
                     </span>
-                    <span className="compact-time-text font-mono text-xs text-slate-400">{trip.date} • {trip.time}</span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {/* Refined status badge that looks gorgeous on mobile without chaotic animation */}
+                    {isDone ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
+                        <svg className="w-3 h-3 text-emerald-400" viewBox="0 0 16 16" fill="currentColor">
+                          <path fillRule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clipRule="evenodd" />
+                        </svg>
+                        <span>Completed</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/25">
+                        <span className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]"></span>
+                        <span>In Transit</span>
+                      </span>
+                    )}
+                    <span className="font-mono text-[11px] text-slate-400">{trip.time}</span>
                   </div>
                 </div>
 
-                {/* Client & Fare Row */}
-                <div className="compact-client-row flex items-start justify-between gap-3 mt-1">
-                  <div className="client-meta-col flex flex-col">
-                    <h3 className="compact-client-title text-base font-black text-white">{trip.clientName}</h3>
-                    {isTakeMeHome && trip.clientCar && (
-                      <span className="compact-subcar text-xs text-amber-300">Client's <strong>{trip.clientCar}</strong></span>
+                {/* 2. Client & Fare */}
+                <div className="flex items-start justify-between gap-3 pt-0.5">
+                  <div className="flex flex-col min-w-0">
+                    <h3 className="text-base sm:text-lg font-black text-white group-hover:text-amber-300 transition-colors tracking-tight truncate">
+                      {trip.clientName}
+                    </h3>
+                    <span className="text-xs text-slate-400 flex items-center gap-1.5 mt-0.5 truncate">
+                      {isTakeMeHome && trip.clientCar ? (
+                        <span className="text-amber-300/90 font-medium truncate">Client Car: {trip.clientCar}</span>
+                      ) : trip.car ? (
+                        <span className="text-cyan-300/90 font-medium truncate">Fleet: {trip.car}</span>
+                      ) : (
+                        <span className="text-slate-500">Private Booking</span>
+                      )}
+                    </span>
+                  </div>
+                  <div className="text-lg sm:text-xl font-black font-mono text-emerald-400 shrink-0">
+                    {formatCurrency(trip.fare)}
+                  </div>
+                </div>
+
+                {/* 3. Decluttered Route Timeline */}
+                <div className="flex flex-col gap-1.5 py-1 text-xs">
+                  <div className="flex items-start gap-2.5">
+                    <span className="w-2 h-2 rounded-full bg-amber-400 mt-1 shrink-0 shadow-[0_0_6px_rgba(251,191,36,0.6)]"></span>
+                    <span className="truncate font-medium text-slate-200">{trip.pickup}</span>
+                  </div>
+                  <div className="w-0.5 h-2 bg-white/15 ml-[3.5px] -my-0.5"></div>
+                  <div className="flex items-start gap-2.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 mt-1 shrink-0 shadow-[0_0_6px_rgba(52,211,153,0.6)]"></span>
+                    <span className="truncate font-medium text-slate-200">{trip.dropoff}</span>
+                  </div>
+                </div>
+
+                {/* 4. Desktop-Enhanced Details: Escort Vehicle, Client Phone, Notes Preview */}
+                <div className="hidden sm:flex flex-col gap-1.5 text-xs text-slate-300 pt-1">
+                  <div className="flex flex-wrap items-center gap-2 text-[11px]">
+                    {isTakeMeHome && trip.chaseCar && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/5 text-slate-300">
+                        <span className="text-amber-300 font-bold">Escort:</span>
+                        <span className="font-mono">{trip.chaseCar}</span>
+                      </span>
+                    )}
+                    {trip.clientPhone && (
+                      <a
+                        href={`tel:${trip.clientPhone}`}
+                        onClick={e => e.stopPropagation()}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors"
+                      >
+                        <span>📞 {trip.clientPhone}</span>
+                      </a>
                     )}
                   </div>
-                  <div className="compact-fare-val text-lg font-black font-mono text-emerald-400">{formatCurrency(trip.fare)}</div>
+
+                  {trip.notes && (
+                    <p className="text-[11px] text-slate-400 italic line-clamp-1 bg-white/[0.02] p-1.5 rounded-lg border border-white/5">
+                      "{trip.notes}"
+                    </p>
+                  )}
                 </div>
 
-                {/* Route Snippet */}
-                <div className="compact-route-snippet flex items-center gap-2 p-2 rounded-lg bg-black/30 border border-white/5 text-xs text-slate-300">
-                  <span className="route-point-txt truncate max-w-[45%]">📍 {trip.pickup}</span>
-                  <span className="route-arrow-txt font-black text-amber-400">➔</span>
-                  <span className="route-point-txt truncate max-w-[45%]">🏁 {trip.dropoff}</span>
-                </div>
-
-                {/* Card Bottom: Drivers & View Details Button */}
-                <div className="compact-card-bottom flex items-center justify-between pt-2 border-t border-white/5">
-                  <div className="compact-drivers-summary flex items-center gap-1.5 text-xs text-slate-400 truncate max-w-[70%]">
-                    <span className="driver-icon-sm">👤</span>
-                    <span className="driver-names-sm truncate">
+                {/* 5. Footer: Drivers & Action Row */}
+                <div className="flex items-center justify-between pt-2.5 border-t border-white/5 text-xs">
+                  <div className="flex items-center gap-1.5 text-slate-400 truncate max-w-[65%] sm:max-w-[55%]">
+                    <span className="text-xs text-amber-400 shrink-0">👤</span>
+                    <span className="truncate font-medium text-slate-300">
                       {isTakeMeHome
-                        ? `${trip.clientDriverName || 'Lead'} & ${trip.chaseDriverName || 'Chase'} (${trip.chaseCar || 'Escort'})`
-                        : `${trip.driverName || 'Driver'} (${trip.car || 'Fleet'})`}
+                        ? `${trip.clientDriverName || 'Lead'} & ${trip.chaseDriverName || 'Chase'}`
+                        : `${trip.driverName || 'Driver'}`}
                     </span>
                   </div>
 
-                  <div className="compact-action-row">
-                    <span className="compact-tap-hint text-xs font-bold text-cyan-400 flex items-center gap-0.5">View Details ›</span>
+                  {/* Quick Action buttons on PC / Details hint on Mobile */}
+                  <div className="flex items-center gap-1.5">
+                    <div className="hidden sm:flex items-center gap-1.5 mr-1" onClick={e => e.stopPropagation()}>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-xs px-2.5 py-1 text-[11px] font-bold rounded-lg hover:bg-white/15"
+                        onClick={() => handlePrintPDF(trip)}
+                        title="Print Official PDF Voucher"
+                      >
+                        <span>🖨️ Voucher</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={`btn ${isDone ? 'btn-secondary' : 'btn-emerald'} btn-xs px-2.5 py-1 text-[11px] font-bold rounded-lg`}
+                        onClick={() => handleToggleTripStatus(trip)}
+                        title={isDone ? 'Reopen Trip' : 'Mark Completed'}
+                      >
+                        <span>{isDone ? 'Reopen' : '✓ Done'}</span>
+                      </button>
+                    </div>
+
+                    <span className="text-xs font-bold text-amber-400 group-hover:text-amber-300 group-hover:translate-x-0.5 transition-all">
+                      Details ›
+                    </span>
                   </div>
                 </div>
               </article>
@@ -1359,7 +1454,7 @@ export default function Home() {
       <div className="mobile-fab-container fixed bottom-6 right-6 z-40">
         <button
           type="button"
-          className="btn-fab-log shadow-2xl shadow-amber-500/30 hover:scale-105 active:scale-95 transition-transform flex items-center gap-2 px-5 py-3.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black text-sm"
+          className="btn-fab-log shadow-2xl shadow-amber-500/30 hover:scale-105 active:scale-95 transition-transform flex items-center gap-2.5 px-5 py-3.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-black text-sm"
           onClick={() => setActiveModal('log_trip')}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -1371,207 +1466,220 @@ export default function Home() {
       </div>
 
       {/* =========================================================================
-          DEDICATED TRIP DETAIL MODAL (DECLUTTERED DETAIL VIEW)
+          DEDICATED TRIP DETAIL MODAL (FIXED HEADER & FOOTER, NO CLIPPING AT TOP/BOTTOM)
           ========================================================================= */}
       {activeModal === 'trip_detail' && selectedTrip && (
-        <div className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-md animate-fade-in" onClick={() => setActiveModal(null)}>
-          <div className="trip-detail-dialog-card w-full max-w-[500px] rounded-3xl overflow-hidden bg-slate-900 border border-white/10 shadow-2xl" onClick={e => e.stopPropagation()}>
-            <div className="detail-modal-card p-4 sm:p-5 flex flex-col gap-3.5 max-h-[85vh] overflow-y-auto">
-              
-              {/* Top Navigation */}
-              <div className="detail-top-nav flex items-center justify-between">
+        <div className="modal-backdrop fixed inset-0 z-50 flex flex-col items-center justify-start overflow-y-auto p-3 sm:p-5 bg-black/85 backdrop-blur-xl animate-fade-in" onClick={() => setActiveModal(null)}>
+          <div
+            className="trip-detail-dialog-card w-full max-w-[540px] md:max-w-3xl lg:max-w-4xl my-auto max-h-[calc(100dvh-2rem)] flex flex-col bg-slate-900 border border-white/15 shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden animate-scale-up"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* 1. STICKY TOP NAVIGATION (NEVER CUTS OFF AT THE TOP) */}
+            <div className="sticky top-0 z-30 bg-slate-900/98 backdrop-blur-md px-4 py-3 sm:px-5 sm:py-3.5 border-b border-white/10 flex items-center justify-between shrink-0">
+              <button
+                type="button"
+                className="btn-back-link flex items-center gap-1.5 text-slate-400 hover:text-white text-xs sm:text-sm font-bold transition-colors"
+                onClick={() => setActiveModal(null)}
+              >
+                <span className="back-arrow text-base">←</span>
+                <span>Back to Trips</span>
+              </button>
+              <div className="detail-header-right flex items-center gap-2.5">
+                <span className={`status-pill status-${selectedTrip.status}`}>
+                  {selectedTrip.status === 'completed' ? '✓ Completed' : '● In Transit'}
+                </span>
                 <button
                   type="button"
-                  className="btn-back-link flex items-center gap-1.5 text-slate-400 hover:text-white text-xs font-bold transition-colors"
+                  className="modal-close w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/20 transition-all"
                   onClick={() => setActiveModal(null)}
                 >
-                  <span className="back-arrow text-base">←</span>
-                  <span>Back to Trips</span>
+                  ✕
                 </button>
-                <div className="detail-header-right flex items-center gap-2">
-                  <span className={`status-pill status-${selectedTrip.status}`}>
-                    {selectedTrip.status === 'completed' ? '✓ Completed' : '● In Transit'}
-                  </span>
-                  <button
-                    type="button"
-                    className="modal-close w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
-                    onClick={() => setActiveModal(null)}
-                  >
-                    ✕
-                  </button>
-                </div>
               </div>
+            </div>
 
-              {/* Hero Header */}
-              <div className={`detail-hero-banner p-4 rounded-2xl flex flex-col gap-2 ${selectedTrip.type === 'take_me_home' ? 'hero-tmh' : 'hero-chauffeur'}`}>
-                <div className="hero-type-row flex items-center justify-between text-xs font-mono">
-                  <span className="type-tag font-black">
-                    {selectedTrip.type === 'take_me_home' ? '🚗 TAKE ME HOME' : '🎩 CHAUFFEUR'}
-                  </span>
-                  <span className="detail-time-tag opacity-80">{selectedTrip.date} • {selectedTrip.time}</span>
-                </div>
-                <h2 className="detail-client-name text-2xl font-black text-white tracking-tight">{selectedTrip.clientName}</h2>
-                {selectedTrip.clientPhone && (
-                  <a href={`tel:${selectedTrip.clientPhone}`} className="detail-phone-btn inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold w-fit">
-                    <span>📞 Call {selectedTrip.clientPhone}</span>
-                  </a>
-                )}
-                {selectedTrip.type === 'take_me_home' && selectedTrip.clientCar && (
-                  <div className="detail-client-car-badge text-xs px-2.5 py-1 rounded-md w-fit">
-                    <span>Client Car: <strong>{selectedTrip.clientCar}</strong></span>
-                  </div>
-                )}
-              </div>
-
-              {/* Route Section */}
-              <div className="detail-section-box p-3.5 rounded-2xl bg-white/[0.03] border border-white/5 flex flex-col gap-2">
-                <span className="section-micro-lbl text-[11px] font-bold text-slate-400 uppercase tracking-wider">TRANSIT ROUTE</span>
-                <div className="detail-route-flow flex flex-col gap-1 pl-1">
-                  <div className="route-step flex items-start gap-3">
-                    <span className="route-marker pickup-marker w-3 h-3 rounded-full mt-1 shrink-0 bg-amber-400"></span>
-                    <div>
-                      <span className="route-lbl text-[10px] font-bold text-slate-400 uppercase">PICKUP VENUE</span>
-                      <p className="route-addr text-sm font-semibold text-white">{selectedTrip.pickup}</p>
+            {/* 2. SCROLLABLE BODY (RESPONSIVE: 1-COLUMN MOBILE, 2-COLUMN DESKTOP) */}
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                {/* Left Column: Hero Banner + Route */}
+                <div className="flex flex-col gap-4">
+                  {/* Hero Header */}
+                  <div className={`detail-hero-banner p-4 sm:p-5 rounded-2xl flex flex-col gap-2.5 ${selectedTrip.type === 'take_me_home' ? 'hero-tmh' : 'hero-chauffeur'}`}>
+                    <div className="hero-type-row flex items-center justify-between text-xs font-mono">
+                      <span className="type-tag font-black">
+                        {selectedTrip.type === 'take_me_home' ? '🚗 TAKE ME HOME' : '🎩 CHAUFFEUR'}
+                      </span>
+                      <span className="detail-time-tag opacity-80">{selectedTrip.date} • {selectedTrip.time}</span>
                     </div>
-                  </div>
-                  <div className="route-step-line w-0.5 h-4 bg-white/20 ml-1.5"></div>
-                  <div className="route-step flex items-start gap-3">
-                    <span className="route-marker dropoff-marker w-3 h-3 rounded-full mt-1 shrink-0 bg-emerald-400"></span>
-                    <div>
-                      <span className="route-lbl text-[10px] font-bold text-slate-400 uppercase">DESTINATION</span>
-                      <p className="route-addr text-sm font-semibold text-white">{selectedTrip.dropoff}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Who Done It Section */}
-              <div className="detail-section-box who-box-accent p-3.5 rounded-2xl bg-white/[0.03] border border-white/5 flex flex-col gap-2.5">
-                <div className="section-title-row flex items-center justify-between">
-                  <span className="section-micro-lbl text-[11px] font-bold text-slate-400 uppercase tracking-wider">WHO DONE THIS TRIP</span>
-                  <span className="who-count-badge text-[11px] font-bold px-2 py-0.5 rounded-full">
-                    {selectedTrip.type === 'take_me_home' ? '2 Drivers' : '1 Driver'}
-                  </span>
-                </div>
-
-                {selectedTrip.type === 'take_me_home' ? (
-                  <div className="detail-dual-drivers grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <div className="detail-driver-item flex items-center gap-3 p-2.5 rounded-xl bg-slate-950/60 border border-white/5">
-                      <div className="driver-num-badge w-7 h-7 rounded-full flex items-center justify-center font-black text-xs shrink-0 bg-amber-400 text-slate-950">1</div>
-                      <div className="flex flex-col">
-                        <span className="driver-role-title text-[10px] text-slate-400 font-bold uppercase">Drove Client's Car</span>
-                        <strong className="driver-name-highlight text-sm text-white">{selectedTrip.clientDriverName || 'Lead Driver'}</strong>
-                      </div>
-                    </div>
-
-                    <div className="detail-driver-item flex items-center gap-3 p-2.5 rounded-xl bg-slate-950/60 border border-white/5">
-                      <div className="driver-num-badge badge-chase w-7 h-7 rounded-full flex items-center justify-center font-black text-xs shrink-0 bg-cyan-400 text-slate-950">2</div>
-                      <div className="flex flex-col">
-                        <span className="driver-role-title text-[10px] text-slate-400 font-bold uppercase">Drove Escort Chase Car</span>
-                        <strong className="driver-name-highlight text-sm text-white">{selectedTrip.chaseDriverName || 'Chase Driver'}</strong>
-                        <small className="chase-car-text text-xs text-amber-300 font-mono">{selectedTrip.chaseCar || 'Fleet Escort'}</small>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="detail-driver-item flex items-center gap-3 p-2.5 rounded-xl bg-slate-950/60 border border-white/5">
-                    <div className="driver-num-badge w-7 h-7 rounded-full flex items-center justify-center text-sm shrink-0 bg-cyan-400">🎩</div>
-                    <div className="flex flex-col">
-                      <span className="driver-role-title text-[10px] text-slate-400 font-bold uppercase">Chauffeur Driver</span>
-                      <strong className="driver-name-highlight text-sm text-white">{selectedTrip.driverName || 'Driver'}</strong>
-                      <small className="chase-car-text text-xs text-amber-300 font-mono">Fleet: {selectedTrip.car || 'Company Fleet'}</small>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Prominent Trip Notes with Live Edit */}
-              <div className="detail-section-box notes-box-gold p-3.5 rounded-2xl bg-white/[0.03] border border-white/5 flex flex-col gap-2">
-                <div className="section-title-row flex items-center justify-between">
-                  <span className="section-micro-lbl text-[11px] font-bold text-slate-400 uppercase tracking-wider">📝 TRIP NOTES & INSTRUCTIONS</span>
-                  <button
-                    type="button"
-                    className="btn-text-edit text-xs font-bold text-amber-400 hover:text-amber-300"
-                    onClick={() => setIsEditingDetailNotes(prev => !prev)}
-                  >
-                    {isEditingDetailNotes ? 'Cancel' : 'Edit Notes'}
-                  </button>
-                </div>
-
-                {!isEditingDetailNotes ? (
-                  <p className="detail-notes-text text-xs text-slate-300 leading-relaxed whitespace-pre-wrap">
-                    {selectedTrip.notes && selectedTrip.notes.trim() ? (
-                      selectedTrip.notes
-                    ) : (
-                      <em className="text-slate-500">No notes recorded for this trip yet.</em>
+                    <h2 className="detail-client-name text-2xl sm:text-3xl font-black text-white tracking-tight">{selectedTrip.clientName}</h2>
+                    {selectedTrip.clientPhone && (
+                      <a href={`tel:${selectedTrip.clientPhone}`} className="detail-phone-btn inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold w-fit hover:scale-105 transition-transform">
+                        <span>📞 Call {selectedTrip.clientPhone}</span>
+                      </a>
                     )}
-                  </p>
-                ) : (
-                  <div className="edit-notes-form flex flex-col gap-2">
-                    <textarea
-                      className="modal-inp text-xs p-2.5 rounded-xl"
-                      rows={3}
-                      value={detailNotesText}
-                      onChange={e => setDetailNotesText(e.target.value)}
-                      placeholder="Enter gate codes, key handover info, etc..."
-                    />
-                    <div className="edit-notes-actions flex justify-end gap-2">
-                      <button
-                        type="button"
-                        className="btn btn-secondary btn-xs px-3 py-1.5"
-                        onClick={() => setIsEditingDetailNotes(false)}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-gold btn-xs px-3 py-1.5 font-bold"
-                        onClick={handleSaveDetailNotes}
-                      >
-                        Save Notes
-                      </button>
+                    {selectedTrip.type === 'take_me_home' && selectedTrip.clientCar && (
+                      <div className="detail-client-car-badge text-xs px-3 py-1.5 rounded-lg w-fit">
+                        <span>Client Car: <strong>{selectedTrip.clientCar}</strong></span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Transit Route Flow */}
+                  <div className="detail-section-box p-4 rounded-2xl bg-white/[0.03] border border-white/5 flex flex-col gap-2.5">
+                    <span className="section-micro-lbl text-[11px] font-bold text-slate-400 uppercase tracking-wider">TRANSIT ROUTE</span>
+                    <div className="detail-route-flow flex flex-col gap-1.5 pl-1">
+                      <div className="route-step flex items-start gap-3">
+                        <span className="route-marker pickup-marker w-3.5 h-3.5 rounded-full mt-1 shrink-0 bg-amber-400 shadow-md shadow-amber-500/50"></span>
+                        <div>
+                          <span className="route-lbl text-[10px] font-bold text-slate-400 uppercase tracking-wide">PICKUP VENUE</span>
+                          <p className="route-addr text-sm font-semibold text-white mt-0.5">{selectedTrip.pickup}</p>
+                        </div>
+                      </div>
+                      <div className="route-step-line w-0.5 h-5 bg-white/20 ml-1.5 my-0.5"></div>
+                      <div className="route-step flex items-start gap-3">
+                        <span className="route-marker dropoff-marker w-3.5 h-3.5 rounded-full mt-1 shrink-0 bg-emerald-400 shadow-md shadow-emerald-500/50"></span>
+                        <div>
+                          <span className="route-lbl text-[10px] font-bold text-slate-400 uppercase tracking-wide">DESTINATION</span>
+                          <p className="route-addr text-sm font-semibold text-white mt-0.5">{selectedTrip.dropoff}</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                )}
-              </div>
+                </div>
 
-              {/* Fare & Financials */}
-              <div className="detail-fare-card flex items-center justify-between p-3.5 rounded-2xl">
-                <span className="fare-card-lbl text-xs font-bold uppercase tracking-wider">Agreed Service Fare</span>
-                <span className="fare-card-val text-xl font-black font-mono">{formatCurrency(selectedTrip.fare)}</span>
-              </div>
+                {/* Right Column: Drivers Audit + Notes + Fare */}
+                <div className="flex flex-col gap-4">
+                  {/* Who Done It Section */}
+                  <div className="detail-section-box who-box-accent p-4 rounded-2xl bg-white/[0.03] border border-white/5 flex flex-col gap-3">
+                    <div className="section-title-row flex items-center justify-between">
+                      <span className="section-micro-lbl text-[11px] font-bold text-slate-400 uppercase tracking-wider">WHO DONE THIS TRIP</span>
+                      <span className="who-count-badge text-[11px] font-bold px-2.5 py-0.5 rounded-full">
+                        {selectedTrip.type === 'take_me_home' ? '2 Drivers Dispatched' : '1 Driver Dispatched'}
+                      </span>
+                    </div>
 
-              {/* Actions Stack */}
-              <div className="detail-actions-stack flex flex-col gap-2 pt-1">
+                    {selectedTrip.type === 'take_me_home' ? (
+                      <div className="detail-dual-drivers grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div className="detail-driver-item flex items-center gap-3 p-3 rounded-xl bg-slate-950/70 border border-white/5">
+                          <div className="driver-num-badge w-8 h-8 rounded-full flex items-center justify-center font-black text-xs shrink-0 bg-amber-400 text-slate-950 shadow-sm">1</div>
+                          <div className="flex flex-col">
+                            <span className="driver-role-title text-[10px] text-slate-400 font-bold uppercase">Drove Client Car</span>
+                            <strong className="driver-name-highlight text-sm text-white">{selectedTrip.clientDriverName || 'Lead Driver'}</strong>
+                          </div>
+                        </div>
+
+                        <div className="detail-driver-item flex items-center gap-3 p-3 rounded-xl bg-slate-950/70 border border-white/5">
+                          <div className="driver-num-badge badge-chase w-8 h-8 rounded-full flex items-center justify-center font-black text-xs shrink-0 bg-cyan-400 text-slate-950 shadow-sm">2</div>
+                          <div className="flex flex-col">
+                            <span className="driver-role-title text-[10px] text-slate-400 font-bold uppercase">Drove Escort Car</span>
+                            <strong className="driver-name-highlight text-sm text-white">{selectedTrip.chaseDriverName || 'Chase Driver'}</strong>
+                            <small className="chase-car-text text-xs text-amber-300 font-mono mt-0.5">{selectedTrip.chaseCar || 'Fleet Escort'}</small>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="detail-driver-item flex items-center gap-3 p-3 rounded-xl bg-slate-950/70 border border-white/5">
+                        <div className="driver-num-badge w-8 h-8 rounded-full flex items-center justify-center text-sm shrink-0 bg-cyan-400 text-slate-950 shadow-sm">🎩</div>
+                        <div className="flex flex-col">
+                          <span className="driver-role-title text-[10px] text-slate-400 font-bold uppercase">Chauffeur Driver</span>
+                          <strong className="driver-name-highlight text-sm text-white">{selectedTrip.driverName || 'Driver'}</strong>
+                          <small className="chase-car-text text-xs text-amber-300 font-mono mt-0.5">Fleet: {selectedTrip.car || 'Company Fleet'}</small>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Prominent Trip Notes with Live Edit */}
+                  <div className="detail-section-box notes-box-gold p-4 rounded-2xl bg-white/[0.03] border border-white/5 flex flex-col gap-2">
+                    <div className="section-title-row flex items-center justify-between">
+                      <span className="section-micro-lbl text-[11px] font-bold text-slate-400 uppercase tracking-wider">📝 TRIP NOTES & INSTRUCTIONS</span>
+                      <button
+                        type="button"
+                        className="btn-text-edit text-xs font-bold text-amber-400 hover:text-amber-300 hover:underline"
+                        onClick={() => setIsEditingDetailNotes(prev => !prev)}
+                      >
+                        {isEditingDetailNotes ? 'Cancel' : 'Edit Notes'}
+                      </button>
+                    </div>
+
+                    {!isEditingDetailNotes ? (
+                      <p className="detail-notes-text text-xs sm:text-sm text-slate-300 leading-relaxed whitespace-pre-wrap">
+                        {selectedTrip.notes && selectedTrip.notes.trim() ? (
+                          selectedTrip.notes
+                        ) : (
+                          <em className="text-slate-500">No notes recorded for this trip yet.</em>
+                        )}
+                      </p>
+                    ) : (
+                      <div className="edit-notes-form flex flex-col gap-2 mt-1">
+                        <textarea
+                          className="modal-inp text-xs p-2.5 rounded-xl"
+                          rows={3}
+                          value={detailNotesText}
+                          onChange={e => setDetailNotesText(e.target.value)}
+                          placeholder="Enter gate codes, key handover info, etc..."
+                        />
+                        <div className="edit-notes-actions flex justify-end gap-2">
+                          <button
+                            type="button"
+                            className="btn btn-secondary btn-xs px-3 py-1.5"
+                            onClick={() => setIsEditingDetailNotes(false)}
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-gold btn-xs px-3 py-1.5 font-bold"
+                            onClick={handleSaveDetailNotes}
+                          >
+                            Save Notes
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Fare & Financials */}
+                  <div className="detail-fare-card flex items-center justify-between p-4 rounded-2xl">
+                    <span className="fare-card-lbl text-xs font-bold uppercase tracking-wider">Agreed Service Fare</span>
+                    <span className="fare-card-val text-2xl font-black font-mono">{formatCurrency(selectedTrip.fare)}</span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            {/* 3. STICKY BOTTOM ACTIONS (ALWAYS PINNED, NEVER CUTS OFF AT THE BOTTOM) */}
+            <div className="sticky bottom-0 z-30 bg-slate-900/98 backdrop-blur-md px-4 py-3 sm:px-5 sm:py-3.5 border-t border-white/10 flex flex-col sm:flex-row gap-2 shrink-0">
+              <button
+                type="button"
+                className="btn btn-gold btn-glow flex-1 py-3 px-4 rounded-xl font-black text-xs sm:text-sm tracking-wide shadow-lg shadow-amber-500/25 active:scale-[0.97] transition-all flex items-center justify-center gap-2"
+                onClick={() => handlePrintPDF(selectedTrip)}
+              >
+                <span>🖨️ Print Official PDF Voucher</span>
+              </button>
+
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  className="btn btn-gold btn-full btn-glow py-3 rounded-xl font-black text-sm tracking-wide"
-                  onClick={() => handlePrintPDF(selectedTrip)}
+                  className={`btn ${selectedTrip.status === 'completed' ? 'btn-secondary' : 'btn-emerald'} flex-1 sm:flex-none py-3 px-5 rounded-xl font-bold text-xs active:scale-[0.97] transition-all shrink-0`}
+                  onClick={() => handleToggleTripStatus(selectedTrip)}
                 >
-                  <span>🖨️ Print Official PDF Voucher</span>
+                  <span>{selectedTrip.status === 'completed' ? 'Mark In Transit' : '✓ Mark Completed'}</span>
                 </button>
 
-                <div className="detail-actions-row grid grid-cols-5 gap-2">
-                  <button
-                    type="button"
-                    className={`btn ${selectedTrip.status === 'completed' ? 'btn-secondary' : 'btn-emerald'} col-span-4 py-2.5 rounded-xl font-bold text-xs`}
-                    onClick={() => handleToggleTripStatus(selectedTrip)}
-                  >
-                    <span>{selectedTrip.status === 'completed' ? 'Mark In Progress' : '✓ Mark Completed'}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className="btn btn-danger-outline col-span-1 py-2.5 rounded-xl flex items-center justify-center text-sm"
-                    onClick={() => handleDeleteTrip(selectedTrip._id || selectedTrip.id)}
-                    title="Delete Trip Record"
-                  >
-                    🗑️
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  className="btn btn-danger-outline py-3 px-4 rounded-xl flex items-center justify-center text-sm active:scale-[0.95] transition-all shrink-0"
+                  onClick={() => handleDeleteTrip(selectedTrip._id || selectedTrip.id)}
+                  title="Delete Trip Record"
+                >
+                  🗑️
+                </button>
               </div>
-
             </div>
+
           </div>
         </div>
       )}
@@ -1580,25 +1688,25 @@ export default function Home() {
           DRIVER PROFILE MODAL (NAME, EMAIL, NUMBER, PIC, COLOR THEME)
           ========================================================================= */}
       {activeModal === 'profile' && (
-        <div className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-md animate-fade-in" onClick={() => setActiveModal(null)}>
-          <div className="modal-card w-full max-w-[460px] p-5 rounded-3xl bg-slate-900 border border-white/10 shadow-2xl" onClick={e => e.stopPropagation()}>
-            <div className="modal-top-bar flex items-center justify-between pb-3 border-b border-white/10 mb-4">
+        <div className="modal-backdrop fixed inset-0 z-50 flex flex-col items-center justify-start overflow-y-auto p-3 sm:p-5 bg-black/85 backdrop-blur-xl animate-fade-in" onClick={() => setActiveModal(null)}>
+          <div className="modal-card w-full max-w-[460px] my-auto p-5 rounded-3xl bg-slate-900 border border-white/10 shadow-2xl flex flex-col max-h-[calc(100dvh-2rem)] overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="modal-top-bar flex items-center justify-between pb-3 border-b border-white/10 mb-4 shrink-0">
               <div>
                 <h2 className="modal-heading text-lg font-black text-white">Driver Profile</h2>
                 <small className="text-gold text-xs font-semibold">Admin Chauffeur Credentials</small>
               </div>
               <button
                 type="button"
-                className="modal-close w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white"
+                className="modal-close w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-slate-300 hover:text-white"
                 onClick={() => setActiveModal(null)}
               >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleSaveProfile} className="modal-form flex flex-col gap-3.5">
+            <form onSubmit={handleSaveProfile} className="modal-form flex-1 min-h-0 overflow-y-auto flex flex-col gap-3.5 pr-1">
               {/* Profile Avatar Preview & Upload */}
-              <div className="profile-pic-section flex items-center gap-4 p-3 rounded-2xl bg-white/[0.03] border border-white/5">
+              <div className="profile-pic-section flex items-center gap-4 p-3.5 rounded-2xl bg-white/[0.03] border border-white/5">
                 <div
                   className="profile-avatar-preview w-16 h-16 rounded-full flex items-center justify-center overflow-hidden shrink-0 border-2 border-amber-400 shadow-lg shadow-amber-500/20"
                   style={{
@@ -1615,7 +1723,7 @@ export default function Home() {
                 </div>
 
                 <div className="profile-pic-controls flex flex-col gap-1.5">
-                  <label className="btn btn-secondary btn-xs py-1.5 px-3 rounded-lg cursor-pointer w-fit font-bold" htmlFor="inp-avatar-upload">
+                  <label className="btn btn-secondary btn-xs py-1.5 px-3 rounded-lg cursor-pointer w-fit font-bold hover:scale-105 active:scale-95 transition-all" htmlFor="inp-avatar-upload">
                     <span>📸 Upload Photo</span>
                   </label>
                   <input
@@ -1641,12 +1749,12 @@ export default function Home() {
               {/* Avatar Theme Color Selector */}
               <div className="form-field flex flex-col gap-1">
                 <label className="form-lbl text-xs font-bold text-slate-300">Avatar Color Theme</label>
-                <div className="color-palette-row flex items-center gap-2 py-1">
+                <div className="color-palette-row flex items-center gap-2.5 py-1">
                   {AVATAR_COLORS.map(c => (
                     <button
                       key={c}
                       type="button"
-                      className={`color-dot w-7 h-7 rounded-full transition-transform ${profileColor.toLowerCase() === c.toLowerCase() ? 'selected-color scale-110 ring-2 ring-white ring-offset-2 ring-offset-slate-900' : 'hover:scale-105'}`}
+                      className={`color-dot w-7 h-7 rounded-full transition-all ${profileColor.toLowerCase() === c.toLowerCase() ? 'selected-color scale-110 ring-2 ring-white ring-offset-2 ring-offset-slate-900 shadow-md' : 'hover:scale-105'}`}
                       style={{ background: c }}
                       onClick={() => setProfileColor(c)}
                       title={c}
@@ -1697,7 +1805,7 @@ export default function Home() {
               </div>
 
               {/* Admin Callout */}
-              <div className="admin-profile-callout p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-2.5">
+              <div className="admin-profile-callout p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-2.5">
                 <span className="callout-shield text-xl shrink-0">🛡️</span>
                 <div className="text-xs">
                   <strong className="text-amber-300 font-bold block mb-0.5">Full Admin Powers Enabled</strong>
@@ -1706,7 +1814,7 @@ export default function Home() {
               </div>
 
               {/* Modal Actions */}
-              <div className="modal-actions grid grid-cols-2 gap-2 pt-1">
+              <div className="modal-actions grid grid-cols-2 gap-2 pt-2 mt-auto shrink-0">
                 <button
                   type="button"
                   className="btn btn-secondary btn-full py-2.5 rounded-xl font-bold text-xs"
@@ -1731,16 +1839,16 @@ export default function Home() {
           LOG NEW TRIP MODAL
           ========================================================================= */}
       {activeModal === 'log_trip' && (
-        <div className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-md animate-fade-in" onClick={() => setActiveModal(null)}>
-          <div className="modal-card w-full max-w-[480px] p-5 rounded-3xl bg-slate-900 border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="modal-top-bar flex items-center justify-between pb-3 border-b border-white/10 mb-3">
+        <div className="modal-backdrop fixed inset-0 z-50 flex flex-col items-center justify-start overflow-y-auto p-3 sm:p-5 bg-black/85 backdrop-blur-xl animate-fade-in" onClick={() => setActiveModal(null)}>
+          <div className="modal-card w-full max-w-[500px] my-auto p-5 rounded-3xl bg-slate-900 border border-white/10 shadow-2xl max-h-[calc(100dvh-2rem)] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="modal-top-bar flex items-center justify-between pb-3 border-b border-white/10 mb-3 shrink-0">
               <div>
                 <h2 className="modal-heading text-lg font-black text-white">Log New Service Trip</h2>
                 <small className="text-gold text-xs font-semibold">Take Me Home (2 Drivers) or Chauffeur (1 Driver)</small>
               </div>
               <button
                 type="button"
-                className="modal-close w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white"
+                className="modal-close w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-slate-300 hover:text-white"
                 onClick={() => setActiveModal(null)}
               >
                 ✕
@@ -1748,7 +1856,7 @@ export default function Home() {
             </div>
 
             {/* Segmented Type Switcher */}
-            <div className="type-segmented-control grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-slate-950 border border-white/10 mb-3.5">
+            <div className="type-segmented-control grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-slate-950 border border-white/10 mb-3 shrink-0">
               <button
                 type="button"
                 className={`seg-btn ${tripType === 'take_me_home' ? 'active' : ''} p-2.5 rounded-xl flex flex-col items-center justify-center transition-all`}
@@ -1773,7 +1881,7 @@ export default function Home() {
               </button>
             </div>
 
-            <form onSubmit={handleCreateTrip} className="modal-form flex flex-col gap-3">
+            <form onSubmit={handleCreateTrip} className="modal-form flex-1 min-h-0 overflow-y-auto flex flex-col gap-3 pr-1">
               {/* Callout hint */}
               <div className={`form-callout-hint p-2.5 rounded-xl flex items-center gap-2 text-xs leading-tight ${tripType === 'take_me_home' ? 'bg-amber-500/10 border border-amber-500/25 text-amber-200' : 'bg-cyan-500/10 border border-cyan-500/25 text-cyan-200'}`}>
                 <span className="text-base">{tripType === 'take_me_home' ? '💡' : '🎩'}</span>
@@ -1966,7 +2074,7 @@ export default function Home() {
                 />
               </div>
 
-              <div className="modal-actions grid grid-cols-2 gap-2 pt-2">
+              <div className="modal-actions grid grid-cols-2 gap-2 pt-2 mt-auto shrink-0">
                 <button
                   type="button"
                   className="btn btn-secondary btn-full py-2.5 rounded-xl font-bold text-xs"
@@ -1991,16 +2099,16 @@ export default function Home() {
           MANAGE FLEET CARS MODAL (POLO, FIESTA, I20 CRUD)
           ========================================================================= */}
       {activeModal === 'cars' && (
-        <div className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-md animate-fade-in" onClick={() => setActiveModal(null)}>
-          <div className="modal-card w-full max-w-[460px] p-5 rounded-3xl bg-slate-900 border border-white/10 shadow-2xl max-h-[88vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="modal-top-bar flex items-center justify-between pb-3 border-b border-white/10 mb-3">
+        <div className="modal-backdrop fixed inset-0 z-50 flex flex-col items-center justify-start overflow-y-auto p-3 sm:p-5 bg-black/85 backdrop-blur-xl animate-fade-in" onClick={() => setActiveModal(null)}>
+          <div className="modal-card w-full max-w-[460px] my-auto p-5 rounded-3xl bg-slate-900 border border-white/10 shadow-2xl max-h-[calc(100dvh-2rem)] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="modal-top-bar flex items-center justify-between pb-3 border-b border-white/10 mb-3 shrink-0">
               <div>
                 <h2 className="modal-heading text-lg font-black text-white">Fleet Vehicles Management</h2>
                 <small className="text-gold text-xs font-semibold">VW Polo, Ford Fiesta, Hyundai i20 Rotation</small>
               </div>
               <button
                 type="button"
-                className="modal-close w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white"
+                className="modal-close w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-slate-300 hover:text-white"
                 onClick={() => setActiveModal(null)}
               >
                 ✕
@@ -2008,11 +2116,11 @@ export default function Home() {
             </div>
 
             {/* List of active cars */}
-            <div className="flex flex-col gap-2 mb-4">
+            <div className="flex flex-col gap-2 mb-3 overflow-y-auto max-h-[220px] pr-1">
               {cars.map(c => (
                 <div
                   key={c._id || c.id}
-                  className="p-3 rounded-2xl bg-white/[0.03] border border-white/5 flex items-center justify-between hover:bg-white/[0.05] transition-colors"
+                  className="p-3 rounded-2xl bg-white/[0.03] border border-white/5 flex items-center justify-between hover:bg-white/[0.06] transition-colors"
                 >
                   <div className="flex flex-col">
                     <strong className="text-sm font-bold text-white">{c.name}</strong>
@@ -2023,7 +2131,7 @@ export default function Home() {
                   </div>
                   <button
                     type="button"
-                    className="btn btn-danger-outline btn-xs px-2.5 py-1.5 rounded-lg text-xs"
+                    className="btn btn-danger-outline btn-xs px-2.5 py-1.5 rounded-lg text-xs hover:scale-105 active:scale-95 transition-all"
                     onClick={() => handleDeleteCar(c._id || c.id)}
                     title="Remove Car"
                   >
@@ -2034,7 +2142,7 @@ export default function Home() {
             </div>
 
             {/* Add Car Form */}
-            <form onSubmit={handleAddCar} className="modal-form flex flex-col gap-3 pt-3 border-t border-white/10">
+            <form onSubmit={handleAddCar} className="modal-form flex flex-col gap-3 pt-3 border-t border-white/10 shrink-0">
               <span className="section-micro-lbl text-[11px] font-black text-cyan-400 uppercase tracking-wider">REGISTER NEW FLEET CAR</span>
 
               <div className="form-field">
@@ -2086,7 +2194,7 @@ export default function Home() {
                 </button>
                 <button
                   type="submit"
-                  className="btn btn-cyan btn-full py-2.5 rounded-xl font-black text-xs text-slate-950"
+                  className="btn btn-cyan btn-full py-2.5 rounded-xl font-black text-xs text-slate-950 hover:scale-[1.01] active:scale-[0.98] transition-all"
                   disabled={carSaving}
                 >
                   {carSaving ? 'Registering...' : '+ Add to Fleet'}
@@ -2101,23 +2209,23 @@ export default function Home() {
           POPIA COMPLIANCE MODAL
           ========================================================================= */}
       {activeModal === 'popia' && (
-        <div className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-md animate-fade-in" onClick={() => setActiveModal(null)}>
-          <div className="modal-card w-full max-w-[460px] p-5 rounded-3xl bg-slate-900 border border-white/10 shadow-2xl" onClick={e => e.stopPropagation()}>
-            <div className="modal-top-bar flex items-center justify-between pb-3 border-b border-white/10 mb-3">
+        <div className="modal-backdrop fixed inset-0 z-50 flex flex-col items-center justify-start overflow-y-auto p-3 sm:p-5 bg-black/85 backdrop-blur-xl animate-fade-in" onClick={() => setActiveModal(null)}>
+          <div className="modal-card w-full max-w-[480px] my-auto p-5 rounded-3xl bg-slate-900 border border-white/10 shadow-2xl flex flex-col max-h-[calc(100dvh-2rem)] overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="modal-top-bar flex items-center justify-between pb-3 border-b border-white/10 mb-3 shrink-0">
               <div>
                 <h2 className="modal-heading text-lg font-black text-white">POPIA Compliance Notice</h2>
                 <small className="text-emerald-400 text-xs font-semibold">Protection of Personal Information Act (Act 4 of 2013)</small>
               </div>
               <button
                 type="button"
-                className="modal-close w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white"
+                className="modal-close w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-slate-300 hover:text-white"
                 onClick={() => setActiveModal(null)}
               >
                 ✕
               </button>
             </div>
 
-            <div className="popia-status-badge p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-3 mb-3">
+            <div className="popia-status-badge p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-3 mb-3 shrink-0">
               <span className="status-icon text-2xl">🛡️</span>
               <div className="text-xs">
                 <strong className="text-emerald-300 font-bold block">Active POPIA Safeguards</strong>
@@ -2125,7 +2233,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="popia-section flex flex-col gap-2 max-h-[260px] overflow-y-auto pr-1">
+            <div className="popia-section flex-1 min-h-0 overflow-y-auto flex flex-col gap-2.5 pr-1">
               <div className="popia-condition-card p-3 rounded-xl bg-white/[0.03] border border-white/5 flex items-start gap-2.5">
                 <span className="cond-num w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shrink-0 bg-cyan-500/20 text-cyan-400">1</span>
                 <div className="text-xs">
@@ -2159,7 +2267,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="modal-actions pt-3">
+            <div className="modal-actions pt-3 mt-auto shrink-0 border-t border-white/10">
               <button
                 type="button"
                 className="btn btn-gold btn-full py-2.5 rounded-xl font-bold text-xs"
@@ -2176,8 +2284,8 @@ export default function Home() {
           CHANGE PASSWORD MODAL (VOLUNTARY)
           ========================================================================= */}
       {activeModal === 'change_password' && (
-        <div className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-md animate-fade-in" onClick={() => setActiveModal(null)}>
-          <div className="modal-card w-full max-w-[420px] p-5 rounded-3xl bg-slate-900 border border-white/10 shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="modal-backdrop fixed inset-0 z-50 flex flex-col items-center justify-start overflow-y-auto p-3 sm:p-5 bg-black/85 backdrop-blur-xl animate-fade-in" onClick={() => setActiveModal(null)}>
+          <div className="modal-card w-full max-w-[420px] my-auto p-5 rounded-3xl bg-slate-900 border border-white/10 shadow-2xl max-h-[calc(100dvh-2rem)] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
             <div className="modal-top-bar flex items-center justify-between pb-3 border-b border-white/10 mb-3">
               <div>
                 <h2 className="modal-heading text-lg font-black text-white">Change Driver Password</h2>
@@ -2185,7 +2293,7 @@ export default function Home() {
               </div>
               <button
                 type="button"
-                className="modal-close w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white"
+                className="modal-close w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-slate-300 hover:text-white"
                 onClick={() => setActiveModal(null)}
               >
                 ✕
