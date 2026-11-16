@@ -1,8 +1,8 @@
 // components/dashboard/StatsOverview.jsx
-import React from 'react';
+import React, { memo } from 'react';
 import { formatCurrency } from '../../lib/helpers';
 
-export default function StatsOverview({ trips = [] }) {
+function StatsOverview({ trips = [] }) {
   const totalTrips = trips.length;
   const takeMeHomeCount = trips.filter(t => t.type === 'take_me_home').length;
   const chauffeurCount = trips.filter(t => t.type === 'chauffeur').length;
@@ -54,3 +54,5 @@ export default function StatsOverview({ trips = [] }) {
     </section>
   );
 }
+
+export default memo(StatsOverview);

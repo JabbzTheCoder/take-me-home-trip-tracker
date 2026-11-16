@@ -3,7 +3,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 
-export default function AppHeader({ user, onOpenModal, onLogout }) {
+function AppHeader({ user, onOpenModal, onLogout }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -164,3 +164,5 @@ export default function AppHeader({ user, onOpenModal, onLogout }) {
     </header>
   );
 }
+
+export default React.memo(AppHeader);

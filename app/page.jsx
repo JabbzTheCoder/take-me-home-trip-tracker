@@ -241,8 +241,31 @@ export default function Home() {
     }
   };
 
+  // Modal Navigation Handlers (Stable References)
+  const handleOpenModal = useCallback((modalId) => {
+    setActiveModal(modalId);
+  }, []);
+
+  const handleCloseModal = useCallback(() => {
+    setActiveModal(null);
+  }, []);
+
+  const handleSelectTrip = useCallback((trip) => {
+    setSelectedTrip(trip);
+    setActiveModal('trip-detail');
+  }, []);
+
+  const handleCloseDetailModal = useCallback(() => {
+    setActiveModal(null);
+    setSelectedTrip(null);
+  }, []);
+
+  const handleOpenLogModal = useCallback(() => {
+    setActiveModal('log-trip');
+  }, []);
+
   // Trips: Toggle Status (In Progress <-> Completed)
-  const handleToggleTripStatus = async (trip) => {
+  const handleToggleTripStatus = useCallback(async (trip) => {
     const tripId = trip._id || trip.id;
     const newStatus = trip.status === 'completed' ? 'in_progress' : 'completed';
 
@@ -261,19 +284,17 @@ export default function Home() {
         const label = newStatus === 'completed' ? 'Completed' : 'In Transit';
         showToast(`Trip marked as ${label}`);
         setTrips(prev => prev.map(t => (t._id || t.id) === tripId ? { ...t, status: newStatus } : t));
-        if (selectedTrip && (selectedTrip._id || selectedTrip.id) === tripId) {
-          setSelectedTrip(prev => ({ ...prev, status: newStatus }));
-        }
+        setSelectedTrip(prev => (prev && (prev._id || prev.id) === tripId ? { ...prev, status: newStatus } : prev));
       } else {
         showToast(data.message || 'Failed to update trip status', 'error');
       }
     } catch (err) {
       showToast('Failed to update trip status', 'error');
     }
-  };
+  }, [token, showToast]);
 
   // Trips: Save Inline Notes
-  const handleSaveNotes = async (tripId, notesText) => {
+  const handleSaveNotes = useCallback(async (tripId, notesText) => {
     try {
       const res = await fetch(`/api/trips/${tripId}`, {
         method: 'PUT',
@@ -288,9 +309,7 @@ export default function Home() {
       if (data.success) {
         showToast('Trip notes updated!');
         setTrips(prev => prev.map(t => (t._id || t.id) === tripId ? { ...t, notes: notesText } : t));
-        if (selectedTrip && (selectedTrip._id || selectedTrip.id) === tripId) {
-          setSelectedTrip(prev => ({ ...prev, notes: notesText }));
-        }
+        setSelectedTrip(prev => (prev && (prev._id || prev.id) === tripId ? { ...prev, notes: notesText } : prev));
         return true;
       } else {
         showToast(data.message || 'Failed to save notes', 'error');
@@ -300,10 +319,10 @@ export default function Home() {
       showToast('Error saving notes', 'error');
       return false;
     }
-  };
+  }, [token, showToast]);
 
   // Trips: Delete Trip
-  const handleDeleteTrip = async (tripId) => {
+  const handleDeleteTrip = useCallback(async (tripId) => {
     if (!window.confirm('Are you sure you want to permanently delete this trip record?')) return;
 
     try {
@@ -324,10 +343,10 @@ export default function Home() {
     } catch (err) {
       showToast('Failed to delete trip record', 'error');
     }
-  };
+  }, [token, showToast]);
 
   // Trips: Create New Trip
-  const handleCreateTrip = async (tripData) => {
+  const handleCreateTrip = useCallback(async (tripData) => {
     try {
       const res = await fetch('/api/trips', {
         method: 'POST',
@@ -352,10 +371,10 @@ export default function Home() {
       showToast('Error recording trip', 'error');
       return false;
     }
-  };
+  }, [token, showToast]);
 
   // Fleet: Register New Car
-  const handleAddCar = async (carData) => {
+  const handleAddCar = useCallback(async (carData) => {
     try {
       const res = await fetch('/api/cars', {
         method: 'POST',
@@ -379,10 +398,10 @@ export default function Home() {
       showToast('Error registering vehicle', 'error');
       return false;
     }
-  };
+  }, [token, showToast]);
 
   // Fleet: Delete Car
-  const handleDeleteCar = async (carId) => {
+  const handleDeleteCar = useCallback(async (carId) => {
     if (!window.confirm('Remove this vehicle from active fleet rotation?')) return;
 
     try {
@@ -401,14 +420,14 @@ export default function Home() {
     } catch (err) {
       showToast('Failed to delete vehicle', 'error');
     }
-  };
+  }, [token, showToast]);
 
   // Trips: Print A4 Voucher
-  const handlePrintVoucher = (trip) => {
+  const handlePrintVoucher = useCallback((trip) => {
     const target = trip || selectedTrip;
     if (!target) return;
     printTripVoucher(target);
-  };
+  }, [selectedTrip]);
 
   // Filtered & Searched Trips
   const filteredTrips = useMemo(() => {
@@ -491,7 +510,7 @@ export default function Home() {
       {/* 1. Header Navigation Bar */}
       <AppHeader
         user={user}
-        onOpenModal={(modalId) => setActiveModal(modalId)}
+        onOpenModal={handleOpenModal}
         onLogout={handleLogout}
       />
 
@@ -512,25 +531,19 @@ export default function Home() {
         trips={filteredTrips}
         filter={filter}
         searchQuery={searchQuery}
-        onSelectTrip={(trip) => {
-          setSelectedTrip(trip);
-          setActiveModal('trip-detail');
-        }}
+        onSelectTrip={handleSelectTrip}
         onPrintVoucher={handlePrintVoucher}
         onToggleStatus={handleToggleTripStatus}
-        onOpenLogModal={() => setActiveModal('log-trip')}
+        onOpenLogModal={handleOpenLogModal}
       />
 
       {/* 5. Floating Action Button (Log Trip) */}
-      <LogTripFAB onOpenLogModal={() => setActiveModal('log-trip')} />
+      <LogTripFAB onOpenLogModal={handleOpenLogModal} />
 
       {/* 6. Modular Dialogs & Overlays */}
       <TripDetailModal
         trip={selectedTrip}
-        onClose={() => {
-          setActiveModal(null);
-          setSelectedTrip(null);
-        }}
+        onClose={handleCloseDetailModal}
         onPrintVoucher={handlePrintVoucher}
         onToggleStatus={handleToggleTripStatus}
         onDeleteTrip={handleDeleteTrip}
@@ -539,7 +552,7 @@ export default function Home() {
 
       <LogTripModal
         isOpen={activeModal === 'log-trip'}
-        onClose={() => setActiveModal(null)}
+        onClose={handleCloseModal}
         onSubmit={handleCreateTrip}
         cars={cars}
         currentUser={user}
@@ -547,7 +560,7 @@ export default function Home() {
 
       <FleetModal
         isOpen={activeModal === 'fleet'}
-        onClose={() => setActiveModal(null)}
+        onClose={handleCloseModal}
         cars={cars}
         onAddCar={handleAddCar}
         onDeleteCar={handleDeleteCar}
@@ -555,19 +568,19 @@ export default function Home() {
 
       <ProfileModal
         isOpen={activeModal === 'profile'}
-        onClose={() => setActiveModal(null)}
+        onClose={handleCloseModal}
         currentUser={user}
         onSave={handleUpdateProfile}
       />
 
       <PopiaModal
         isOpen={activeModal === 'popia'}
-        onClose={() => setActiveModal(null)}
+        onClose={handleCloseModal}
       />
 
       <ChangePasswordModal
         isOpen={activeModal === 'change-password'}
-        onClose={() => setActiveModal(null)}
+        onClose={handleCloseModal}
         onChangePassword={handleChangePassword}
       />
 

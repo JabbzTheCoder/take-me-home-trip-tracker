@@ -1,10 +1,9 @@
-// components/dashboard/TripCard.jsx
-import React from 'react';
+import React, { memo } from 'react';
 import { formatCurrency } from '../../lib/helpers';
 import StatusBadge from '../ui/StatusBadge';
 import ServiceBadge from '../ui/ServiceBadge';
 
-export default function TripCard({
+function TripCard({
   trip,
   onSelect,
   onPrintVoucher,
@@ -139,3 +138,5 @@ export default function TripCard({
     </article>
   );
 }
+
+export default memo(TripCard);

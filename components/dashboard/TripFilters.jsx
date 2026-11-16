@@ -1,13 +1,48 @@
 // components/dashboard/TripFilters.jsx
-import React from 'react';
+'use client';
 
-export default function TripFilters({
+import React, { useState, useEffect, useRef, memo, useTransition } from 'react';
+
+function TripFilters({
   filter,
   setFilter,
   searchQuery = '',
   setSearchQuery,
   trips = []
 }) {
+  // Local input state for instantaneous 0ms typing response on mobile
+  const [localQuery, setLocalQuery] = useState(searchQuery);
+  const debounceTimerRef = useRef(null);
+  const [, startTransition] = useTransition();
+
+  // Sync if parent clears or changes searchQuery externally
+  useEffect(() => {
+    setLocalQuery(searchQuery);
+  }, [searchQuery]);
+
+  const handleInputChange = (e) => {
+    const val = e.target.value;
+    // 1. Instant local state update for 120fps typing response on phone keyboard
+    setLocalQuery(val);
+
+    // 2. Debounced non-blocking propagation to parent list filter
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      startTransition(() => {
+        setSearchQuery(val);
+      });
+    }, 150);
+  };
+
+  const handleClear = () => {
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    setLocalQuery('');
+    setSearchQuery('');
+  };
+
   const total = trips.length;
   const tmhCount = trips.filter(t => t.type === 'take_me_home').length;
   const chauffeurCount = trips.filter(t => t.type === 'chauffeur').length;
@@ -26,21 +61,25 @@ export default function TripFilters({
     <div className="flex flex-col gap-3.5 mb-5 sm:mb-6">
       {/* Search Input Bar */}
       <div className="relative w-full">
-        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
+        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none">
           🔍
         </span>
         <input
           type="text"
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
+          value={localQuery}
+          onChange={handleInputChange}
           placeholder="Search by client, pickup, dropoff, vehicle, or driver name..."
-          className="w-full bg-slate-900/80 border border-white/10 rounded-xl pl-10 pr-10 py-2.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/50 transition-all shadow-sm"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck="false"
+          className="w-full bg-slate-900/90 border border-white/10 rounded-xl pl-10 pr-10 py-3 text-base sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/50 transition-colors shadow-sm"
         />
-        {searchQuery && (
+        {localQuery && (
           <button
             type="button"
-            onClick={() => setSearchQuery('')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs bg-white/10 rounded-full w-5 h-5 flex items-center justify-center transition-colors"
+            onClick={handleClear}
+            aria-label="Clear search"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs bg-white/10 rounded-full w-6 h-6 flex items-center justify-center transition-colors active:scale-90"
           >
             ✕
           </button>
@@ -75,3 +114,5 @@ export default function TripFilters({
     </div>
   );
 }
+
+export default memo(TripFilters);
