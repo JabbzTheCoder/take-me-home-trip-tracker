@@ -1,0 +1,37 @@
+[
+  {
+    "_id": "usr-jabbz-01",
+    "name": "Jabbz",
+    "email": "jabbz@tmh-fleet.co.za",
+    "password": "$2b$10$ZUnBIoWBG5Tmv01D12w64.Bj6REe9Hu7lbhosGdvqsowgTN6NjDFe",
+    "role": "Admin Chauffeur",
+    "isAdmin": true,
+    "mustChangePassword": false,
+    "phone": "+27 82 450 1198",
+    "avatarColor": "#38bdf8"
+  },
+  {
+    "_id": "usr-tebza-02",
+    "name": "Tebza",
+    "email": "tebza@tmh-fleet.co.za",
+    "password": "$2b$10$uPkGf558JSHUlJfrJca0luflGHJaulgJojXX0vqzNhqqaiUDvlU0S",
+    "role": "Admin Chauffeur",
+    "isAdmin": true,
+    "mustChangePassword": true,
+    "phone": "+27 73 892 4431",
+    "avatarColor": "#f59e0b",
+    "profilePic": ""
+  },
+  {
+    "_id": "usr-fresh-03",
+    "name": "Fresh",
+    "email": "fresh@tmh-fleet.co.za",
+    "password": "$2b$10$uPkGf558JSHUlJfrJca0luKvDtwlrtfYIetRRSS0zcMwdC9683tBe",
+    "role": "Admin Chauffeur",
+    "isAdmin": true,
+    "mustChangePassword": true,
+    "phone": "+27 84 551 7732",
+    "avatarColor": "#10b981",
+    "profilePic": ""
+  }
+]

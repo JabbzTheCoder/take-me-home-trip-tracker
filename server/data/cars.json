@@ -1,0 +1,35 @@
+[
+  {
+    "_id": "car-polo-01",
+    "name": "VW Polo Hatch",
+    "model": "Polo TSI Comfortline",
+    "plate": "GP 884-POL",
+    "color": "Pure White",
+    "status": "active",
+    "fuelPercent": 90,
+    "odometerKm": 42150,
+    "createdAt": "2026-11-16T16:30:52.340Z"
+  },
+  {
+    "_id": "car-fiesta-02",
+    "name": "Ford Fiesta",
+    "model": "Fiesta 1.0 EcoBoost",
+    "plate": "GP 419-FIE",
+    "color": "Deep Impact Blue",
+    "status": "active",
+    "fuelPercent": 65,
+    "odometerKm": 58400,
+    "createdAt": "2026-11-16T16:30:52.341Z"
+  },
+  {
+    "_id": "car-i20-03",
+    "name": "Hyundai i20",
+    "model": "i20 1.2 Motion",
+    "plate": "GP 302-I20",
+    "color": "Silver Grey",
+    "status": "active",
+    "fuelPercent": 80,
+    "odometerKm": 29800,
+    "createdAt": "2026-11-16T16:30:52.341Z"
+  }
+]
