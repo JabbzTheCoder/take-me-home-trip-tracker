@@ -14,6 +14,7 @@ import FleetModal from '@/components/modals/FleetModal';
 import ProfileModal from '@/components/modals/ProfileModal';
 import PopiaModal from '@/components/modals/PopiaModal';
 import ChangePasswordModal from '@/components/modals/ChangePasswordModal';
+import TaxInvoiceModal from '@/components/modals/TaxInvoiceModal';
 import AuthScreen from '@/components/auth/AuthScreen';
 import MandatoryPasswordChange from '@/components/auth/MandatoryPasswordChange';
 import { printTaxInvoice } from '@/lib/invoice';
@@ -29,6 +30,7 @@ export default function Home() {
   const [cars, setCars] = useState([]);
   const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [invoiceTrip, setInvoiceTrip] = useState(null);
 
   // Modals & UI State
   // activeModal: null | 'trip-detail' | 'log-trip' | 'fleet' | 'profile' | 'change-password' | 'popia'
@@ -430,11 +432,12 @@ export default function Home() {
     }
   }, [token, showToast]);
 
-  // Trips: Print Official Tax Invoice
+  // Trips: Open Official Tax Invoice Modal / Viewer
   const handlePrintInvoice = useCallback((trip) => {
     const target = trip || selectedTrip;
     if (!target) return;
-    printTaxInvoice(target);
+    setInvoiceTrip(target);
+    setActiveModal('tax-invoice');
   }, [selectedTrip]);
 
   // Filtered & Searched Trips
@@ -584,6 +587,12 @@ export default function Home() {
         onClose={handleCloseModal}
         currentUser={user}
         onSave={handleUpdateProfile}
+      />
+
+      <TaxInvoiceModal
+        isOpen={activeModal === 'tax-invoice'}
+        trip={invoiceTrip}
+        onClose={handleCloseModal}
       />
 
       <PopiaModal

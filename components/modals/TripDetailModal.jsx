@@ -419,7 +419,8 @@ export default function TripDetailModal({
             className="btn btn-gold btn-glow flex-1 py-3 px-4 rounded-xl font-black text-xs sm:text-sm tracking-wide shadow-lg shadow-amber-500/25 active:scale-[0.97] transition-all flex items-center justify-center gap-2"
             onClick={() => onPrintInvoice(trip)}
           >
-            <span>🖨️ Print Tax Invoice</span>
+            <span>📄</span>
+            <span>Tax Invoice / PDF</span>
           </button>
 
           {/* Attached Driver Actions: Status Toggle & Defer */}

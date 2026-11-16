@@ -139,22 +139,23 @@ function TripCard({
           )}
         </div>
 
-        {/* Quick Action buttons on PC / Details hint on Mobile */}
-        <div className="flex items-center gap-2">
-          <div className="hidden sm:flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+        {/* Quick Action buttons */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
             <button
               type="button"
-              className="px-2.5 py-1 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-[11px] font-bold text-slate-200 transition-colors flex items-center gap-1"
+              className="px-2 sm:px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-[11px] font-bold text-amber-300 transition-colors flex items-center gap-1"
               onClick={() => onPrintVoucher(trip)}
-              title="Print Official Tax Invoice"
+              title="Official Tax Invoice (PDF & Print)"
             >
-              <span>🖨️ Invoice</span>
+              <span>📄</span>
+              <span>Invoice</span>
             </button>
 
             {isAttached && !isDeferred && (
               <button
                 type="button"
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors ${
+                className={`hidden sm:inline-flex px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors ${
                   isDone
                     ? 'bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-slate-300'
                     : 'bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300'
