@@ -221,20 +221,6 @@ export default function StandaloneInvoicePage() {
             </div>
           </div>
 
-          {/* Bottom Blank Spreadsheet Grid Lines */}
-          <table className="w-full border-collapse text-xs">
-            <tbody>
-              {[1, 2, 3, 4].map((row) => (
-                <tr key={row} className="h-5">
-                  <td className="border border-slate-200 w-1/4"></td>
-                  <td className="border border-slate-200 w-1/4"></td>
-                  <td className="border border-slate-200 w-1/4"></td>
-                  <td className="border border-slate-200 w-1/4"></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
         </div>
       </main>
 
