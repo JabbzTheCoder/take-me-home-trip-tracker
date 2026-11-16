@@ -11,7 +11,7 @@ export const viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: 'cover',
-  themeColor: '#0b111e'
+  themeColor: '#070b14'
 };
 
 export default function RootLayout({ children }) {
@@ -26,11 +26,7 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body>
-        <div id="mobile-app-shell">
-          <main id="view-content" role="main">
-            {children}
-          </main>
-        </div>
+        {children}
       </body>
     </html>
   );
