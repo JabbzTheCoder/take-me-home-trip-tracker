@@ -27,7 +27,9 @@ export default function RootLayout({ children }) {
       </head>
       <body>
         <div id="mobile-app-shell">
-          {children}
+          <main id="view-content" role="main">
+            {children}
+          </main>
         </div>
       </body>
     </html>

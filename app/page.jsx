@@ -19,7 +19,15 @@ export default function Home() {
   const [token, setToken] = useState(null);
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
+  const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
+  const [showPassword, setShowPassword] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
+
+  // Register Fields
+  const [regName, setRegName] = useState('');
+  const [regEmail, setRegEmail] = useState('');
+  const [regPhone, setRegPhone] = useState('');
+  const [regPassword, setRegPassword] = useState('');
 
   // Mandatory / Voluntary Change Password State
   const [newPassword, setNewPassword] = useState('');
@@ -34,7 +42,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   // Modals & Popups
-  // activeModal: null | 'trip_detail' | 'log_trip' | 'print_voucher' | 'profile' | 'cars' | 'change_password' | 'popia'
+  // activeModal: null | 'trip_detail' | 'log_trip' | 'profile' | 'cars' | 'change_password' | 'popia'
   const [activeModal, setActiveModal] = useState(null);
   const [selectedTrip, setSelectedTrip] = useState(null);
   const [systemMenuOpen, setSystemMenuOpen] = useState(false);
@@ -782,12 +790,12 @@ export default function Home() {
   const chauffeurCount = trips.filter(t => t.type === 'chauffeur').length;
   const totalEarnings = trips.reduce((sum, t) => sum + (Number(t.fare) || 0), 0);
 
-  // 1. Loading Screen
+  // 1. Loading State
   if (loading) {
     return (
-      <div className="loading-state" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="loading-state flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <div className="spinner"></div>
-        <p style={{ marginTop: '1rem', color: '#94a3b8' }}>Connecting to Take Me Home fleet database...</p>
+        <p className="text-slate-400 font-medium">Connecting to Take Me Home fleet database...</p>
       </div>
     );
   }
@@ -795,11 +803,11 @@ export default function Home() {
   // 2. Authentication Screen (If Not Signed In)
   if (!user || !token) {
     return (
-      <main className="mobile-main-container">
+      <div className="auth-screen animate-fade-in flex items-center justify-center min-h-[85vh] p-4">
         {/* Toast Container */}
-        <div id="toast-container">
+        <div id="toast-container" className="fixed top-5 left-4 right-4 z-50 flex flex-col items-center gap-2 pointer-events-none">
           {toasts.map(t => (
-            <div key={t.id} className={`toast toast-${t.type} animate-slide-down`}>
+            <div key={t.id} className={`toast toast-${t.type} animate-slide-down pointer-events-auto`}>
               <div className="toast-icon">
                 {t.type === 'error' ? '⚠️' : '✓'}
               </div>
@@ -808,87 +816,200 @@ export default function Home() {
           ))}
         </div>
 
-        <div className="auth-card">
-          <div className="auth-header">
-            <span className="auth-badge">SECURE JWT FLEET ACCESS</span>
-            <h1 className="auth-title">Take Me Home</h1>
-            <p className="auth-subtitle">Jabbz, Tebza & Fresh Trip Tracker Portal</p>
+        <div className="auth-card w-full max-w-[420px]">
+          {/* Header */}
+          <div className="auth-header text-center flex flex-col items-center">
+            <div className="auth-icon-badge mb-3">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/>
+                <circle cx="7" cy="17" r="2"/>
+                <circle cx="17" cy="17" r="2"/>
+                <path d="M5 17h10"/>
+              </svg>
+            </div>
+            <h1 className="auth-title text-2xl font-black text-white tracking-tight">Take Me Home</h1>
+            <p className="auth-sub text-xs text-slate-400 font-semibold tracking-wide uppercase mt-1">Jabbz • Tebza • Fresh • Fleet Ops</p>
           </div>
 
-          <form onSubmit={handleLogin} className="auth-form">
-            <div className="form-field">
-              <label className="form-lbl" htmlFor="inp-email">Driver Email</label>
-              <input
-                type="email"
-                id="inp-email"
-                className="modal-inp"
-                placeholder="e.g. jabbz@tmh-fleet.co.za"
-                value={authEmail}
-                onChange={e => setAuthEmail(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="form-field">
-              <label className="form-lbl" htmlFor="inp-password">Password</label>
-              <input
-                type="password"
-                id="inp-password"
-                className="modal-inp"
-                placeholder="Enter your driver password"
-                value={authPassword}
-                onChange={e => setAuthPassword(e.target.value)}
-                required
-              />
-            </div>
-
-            {/* Quick Preset Selector */}
-            <div className="auth-preset-chips" style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', margin: '0.5rem 0' }}>
-              <span style={{ fontSize: '0.72rem', color: '#94a3b8', width: '100%' }}>Quick Driver Select:</span>
-              <button
-                type="button"
-                className="btn btn-secondary btn-xs"
-                onClick={() => fillPreset('jabbz@tmh-fleet.co.za', 'Jabbz@TMH2026!')}
-              >
-                Jabbz
-              </button>
-              <button
-                type="button"
-                className="btn btn-secondary btn-xs"
-                onClick={() => fillPreset('tebza@tmh-fleet.co.za', 'Tebza@TMH2026!')}
-              >
-                Tebza
-              </button>
-              <button
-                type="button"
-                className="btn btn-secondary btn-xs"
-                onClick={() => fillPreset('fresh@tmh-fleet.co.za', 'Fresh@TMH2026!')}
-              >
-                Fresh
-              </button>
-            </div>
-
-            <button type="submit" className="btn btn-gold btn-full btn-glow" disabled={authLoading}>
-              {authLoading ? 'Authenticating...' : 'Sign In to Driver Portal'}
+          {/* Mode Switcher Tabs */}
+          <div className="auth-mode-tabs grid grid-cols-2 gap-1 bg-slate-900/80 p-1 rounded-xl my-4 border border-white/5">
+            <button
+              type="button"
+              className={`auth-tab ${authMode === 'login' ? 'active' : ''} py-2 text-xs font-bold rounded-lg transition-all`}
+              onClick={() => setAuthMode('login')}
+            >
+              Sign In
             </button>
-          </form>
+            <button
+              type="button"
+              className={`auth-tab ${authMode === 'register' ? 'active' : ''} py-2 text-xs font-bold rounded-lg transition-all`}
+              onClick={() => setAuthMode('register')}
+            >
+              Register Driver
+            </button>
+          </div>
 
-          <div className="auth-footer" style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.75rem', color: '#64748b' }}>
+          {authMode === 'login' ? (
+            <form onSubmit={handleLogin} className="auth-form flex flex-col gap-3.5">
+              <div className="form-field">
+                <label className="form-lbl" htmlFor="inp-login-email">Email Address *</label>
+                <input
+                  type="email"
+                  id="inp-login-email"
+                  className="modal-inp"
+                  placeholder="e.g. jabbz@tmh-fleet.co.za"
+                  value={authEmail}
+                  onChange={e => setAuthEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                />
+              </div>
+
+              <div className="form-field">
+                <div className="password-label-row flex justify-between items-center mb-1">
+                  <label className="form-lbl m-0" htmlFor="inp-login-pass">Password *</label>
+                  <button
+                    type="button"
+                    className="btn-toggle-pass text-xs font-bold text-cyan-400 hover:text-cyan-300"
+                    onClick={() => setShowPassword(prev => !prev)}
+                  >
+                    {showPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  id="inp-login-pass"
+                  className="modal-inp"
+                  placeholder="Enter your driver password"
+                  value={authPassword}
+                  onChange={e => setAuthPassword(e.target.value)}
+                  required
+                  autoComplete="current-password"
+                />
+              </div>
+
+              {/* Quick Driver Login Presets */}
+              <div className="auth-preset-chips flex flex-col gap-1.5 my-1">
+                <span className="text-[11px] font-bold text-slate-400 tracking-wider uppercase">Quick Driver Select:</span>
+                <div className="grid grid-cols-3 gap-1.5">
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-xs py-1.5 font-bold hover:border-cyan-400 hover:text-cyan-300 transition-colors"
+                    onClick={() => fillPreset('jabbz@tmh-fleet.co.za', 'Jabbz@TMH2026!')}
+                  >
+                    Jabbz
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-xs py-1.5 font-bold hover:border-amber-400 hover:text-amber-300 transition-colors"
+                    onClick={() => fillPreset('tebza@tmh-fleet.co.za', 'Tebza@TMH2026!')}
+                  >
+                    Tebza
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-xs py-1.5 font-bold hover:border-emerald-400 hover:text-emerald-300 transition-colors"
+                    onClick={() => fillPreset('fresh@tmh-fleet.co.za', 'Fresh@TMH2026!')}
+                  >
+                    Fresh
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="btn btn-gold btn-full btn-glow mt-2 py-3 font-black text-sm tracking-wide"
+                disabled={authLoading}
+              >
+                {authLoading ? 'Verifying Credentials...' : 'Sign In to Driver Portal'}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              setAuthLoading(true);
+              try {
+                // Register driver through backend
+                const res = await fetch('/api/auth/profile', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ name: regName, email: regEmail, phone: regPhone, password: regPassword })
+                });
+                showToast('Driver account created! Please sign in.');
+                setAuthMode('login');
+                setAuthEmail(regEmail);
+              } catch (err) {
+                showToast('Failed to register driver', 'error');
+              } finally {
+                setAuthLoading(false);
+              }
+            }} className="auth-form flex flex-col gap-3">
+              <div className="form-field">
+                <label className="form-lbl" htmlFor="inp-reg-name">Driver Name *</label>
+                <input
+                  type="text"
+                  id="inp-reg-name"
+                  className="modal-inp"
+                  placeholder="e.g. Neo"
+                  value={regName}
+                  onChange={e => setRegName(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="form-field">
+                <label className="form-lbl" htmlFor="inp-reg-email">Email Address *</label>
+                <input
+                  type="email"
+                  id="inp-reg-email"
+                  className="modal-inp"
+                  placeholder="e.g. neo@tmh-fleet.co.za"
+                  value={regEmail}
+                  onChange={e => setRegEmail(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="form-field">
+                <label className="form-lbl" htmlFor="inp-reg-pass">Create Password (min 6 chars) *</label>
+                <input
+                  type="password"
+                  id="inp-reg-pass"
+                  className="modal-inp"
+                  placeholder="Choose a strong password"
+                  value={regPassword}
+                  onChange={e => setRegPassword(e.target.value)}
+                  minLength={6}
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="btn btn-gold btn-full btn-glow mt-2 py-3 font-black text-sm"
+                disabled={authLoading}
+              >
+                {authLoading ? 'Registering...' : 'Register Driver Account'}
+              </button>
+            </form>
+          )}
+
+          <div className="auth-footer mt-4 text-center text-xs text-slate-500 font-medium">
             <span>Dynamic MongoDB Storage • POPIA Compliant</span>
           </div>
         </div>
-      </main>
+      </div>
     );
   }
 
   // 3. Mandatory First Login Password Change Screen
   if (user.mustChangePassword) {
     return (
-      <main className="mobile-main-container">
+      <div className="auth-screen animate-fade-in flex items-center justify-center min-h-[85vh] p-4">
         {/* Toast Container */}
-        <div id="toast-container">
+        <div id="toast-container" className="fixed top-5 left-4 right-4 z-50 flex flex-col items-center gap-2 pointer-events-none">
           {toasts.map(t => (
-            <div key={t.id} className={`toast toast-${t.type} animate-slide-down`}>
+            <div key={t.id} className={`toast toast-${t.type} animate-slide-down pointer-events-auto`}>
               <div className="toast-icon">
                 {t.type === 'error' ? '⚠️' : '✓'}
               </div>
@@ -897,60 +1018,75 @@ export default function Home() {
           ))}
         </div>
 
-        <div className="auth-card">
-          <div className="auth-header">
-            <span className="auth-badge" style={{ background: 'rgba(245, 158, 11, 0.2)', color: '#fbbf24', border: '1px solid rgba(245, 158, 11, 0.4)' }}>
-              MANDATORY SECURITY REQUIREMENT
-            </span>
-            <h1 className="auth-title">Personalize Your Password</h1>
-            <p className="auth-subtitle">
-              Hello <strong>{user.name}</strong>! All drivers are required to change their password on first login so that other drivers cannot access your account.
+        <div className="auth-card w-full max-w-[420px]">
+          <div className="auth-header text-center flex flex-col items-center">
+            <div className="auth-icon-badge icon-badge-gold mb-3">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </div>
+            <h1 className="auth-title text-2xl font-black text-white">Mandatory Security Step</h1>
+            <p className="auth-sub text-xs text-amber-400 font-bold uppercase tracking-wider mt-1">Set your own private password</p>
+          </div>
+
+          <div className="security-alert-box my-3 p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-200/90 leading-relaxed">
+            <p>
+              Welcome, <strong>{user.name}</strong>! To ensure the other drivers cannot access your account or log in as you, you must personalize your private password now before accessing the dashboard.
             </p>
           </div>
 
-          <form onSubmit={handleChangePassword} className="auth-form">
+          <form onSubmit={handleChangePassword} className="auth-form flex flex-col gap-3">
             <div className="form-field">
-              <label className="form-lbl" htmlFor="inp-new-pw">New Secure Password (min 6 characters) *</label>
+              <label className="form-lbl" htmlFor="inp-mandatory-new">New Private Password (min 6 characters) *</label>
               <input
                 type="password"
-                id="inp-new-pw"
+                id="inp-mandatory-new"
                 className="modal-inp"
                 placeholder="Enter your new secret password"
                 value={newPassword}
                 onChange={e => setNewPassword(e.target.value)}
+                minLength={6}
                 required
+                autoComplete="new-password"
               />
             </div>
 
             <div className="form-field">
-              <label className="form-lbl" htmlFor="inp-confirm-pw">Confirm New Password *</label>
+              <label className="form-lbl" htmlFor="inp-mandatory-confirm">Confirm New Password *</label>
               <input
                 type="password"
-                id="inp-confirm-pw"
+                id="inp-mandatory-confirm"
                 className="modal-inp"
-                placeholder="Re-type your new password"
+                placeholder="Confirm your new secret password"
                 value={confirmPassword}
                 onChange={e => setConfirmPassword(e.target.value)}
+                minLength={6}
                 required
+                autoComplete="new-password"
               />
             </div>
 
-            <button type="submit" className="btn btn-gold btn-full btn-glow" disabled={pwLoading}>
-              {pwLoading ? 'Securing Account...' : 'Save Password & Continue'}
+            <button
+              type="submit"
+              className="btn btn-gold btn-full btn-glow mt-2 py-3 font-black text-sm"
+              disabled={pwLoading}
+            >
+              {pwLoading ? 'Securing Account...' : 'Set My Private Password & Enter'}
             </button>
           </form>
         </div>
-      </main>
+      </div>
     );
   }
 
   // 4. Main Authenticated Dashboard Screen
   return (
-    <main className="mobile-main-container">
+    <div className="mobile-dashboard animate-fade-in flex flex-col gap-4 p-3 sm:p-4 pb-24">
       {/* Toast Notifications (Pops at the top) */}
-      <div id="toast-container">
+      <div id="toast-container" className="fixed top-5 left-4 right-4 z-50 flex flex-col items-center gap-2 pointer-events-none">
         {toasts.map(t => (
-          <div key={t.id} className={`toast toast-${t.type} animate-slide-down`}>
+          <div key={t.id} className={`toast toast-${t.type} animate-slide-down pointer-events-auto`}>
             <div className="toast-icon">
               {t.type === 'error' ? '⚠️' : '✓'}
             </div>
@@ -960,126 +1096,131 @@ export default function Home() {
       </div>
 
       {/* =========================================================================
-          CLEAN, UNCLUTTERED TOP BAR (USER REQUIREMENT)
+          AUTHENTIC TOP BAR (CLEAN, UNCLUTTERED, PROFESSIONAL & MODERN)
           ========================================================================= */}
-      <header className="mobile-header-clean">
-        {/* Left: Driver Identity Trigger */}
+      <header className="mobile-top-bar flex items-center justify-between pb-3.5 border-b border-white/10 relative">
+        {/* User Profile (Tap to Edit) */}
         <div
-          className="driver-profile-trigger"
+          className="user-profile-badge flex items-center gap-3 cursor-pointer p-1 rounded-xl hover:bg-white/5 transition-all select-none"
           onClick={() => {
             initProfileForm(user);
             setActiveModal('profile');
           }}
-          title="Click to view & edit your driver profile"
+          title="Tap to update profile, email, phone & picture"
         >
-          <div
-            className="user-avatar-circle"
-            style={{
-              background: user.profilePic ? 'transparent' : (user.avatarColor || '#38bdf8')
-            }}
-          >
-            {user.profilePic ? (
-              <img src={user.profilePic} alt={user.name} className="avatar-img-preview" />
-            ) : (
-              (user.name || 'D').charAt(0).toUpperCase()
-            )}
-          </div>
-          <div className="driver-header-text">
-            <span className="driver-header-name">{user.name}</span>
-            <span className="admin-mini-badge">Admin</span>
+          {user?.profilePic ? (
+            <img src={user.profilePic} alt={user.name} className="user-avatar-img w-11 h-11 rounded-full object-cover border-2 border-cyan-400 shadow-md shadow-cyan-500/20" />
+          ) : (
+            <span
+              className="user-avatar w-11 h-11 rounded-full font-black text-lg flex items-center justify-center text-slate-900 shadow-md"
+              style={{ background: user?.avatarColor || '#38bdf8' }}
+            >
+              {user ? user.name.charAt(0).toUpperCase() : 'J'}
+            </span>
+          )}
+          <div className="user-names flex flex-col">
+            <div className="user-name-title-row flex items-center gap-2">
+              <span className="greeting-name font-black text-lg text-white tracking-tight">{user ? user.name : 'Driver'}</span>
+              <span className="admin-badge-mini uppercase text-[10px] font-black tracking-wider px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                Admin
+              </span>
+            </div>
+            <span className="greeting-sub text-xs text-emerald-400 font-semibold flex items-center gap-1.5 mt-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              Online • Tap for Profile
+            </span>
           </div>
         </div>
 
-        {/* Right: Clean Action Controls */}
-        <div className="header-actions-group" ref={menuRef}>
+        {/* Action Controls: Fleet & Menu */}
+        <div className="top-bar-actions flex items-center gap-2" ref={menuRef}>
           <button
             type="button"
-            className="btn-manage-cars"
+            className="btn-manage-cars flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-cyan-500/15 border border-cyan-500/35 text-cyan-400 text-xs font-bold hover:scale-105 active:scale-95 transition-transform"
             onClick={() => setActiveModal('cars')}
-            title="Manage Fleet Cars (Polo, Fiesta, i20)"
+            title="Manage Fleet (Polo, Fiesta, i20)"
           >
             <span>🚗 Fleet</span>
           </button>
-
           <button
             type="button"
-            className="btn-menu-icon"
+            className="btn-menu-icon w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-base hover:bg-white/10 hover:rotate-30 active:scale-90 transition-all"
             onClick={() => setSystemMenuOpen(prev => !prev)}
-            title="Options & Settings"
+            title="Menu & Settings"
           >
-            ⚙️
+            <span>⚙️</span>
           </button>
 
-          {/* Glassmorphism System Menu Dropdown */}
+          {/* DROPDOWN QUICK MENU */}
           {systemMenuOpen && (
-            <div className="system-menu-dropdown">
+            <div id="quick-system-menu" className="system-menu-dropdown absolute top-14 right-0 w-64 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl p-2 shadow-2xl z-50 flex flex-col gap-1 animate-in fade-in zoom-in-95 duration-150">
               <div
-                className="menu-item"
+                className="menu-item flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/5 cursor-pointer transition-colors"
                 onClick={() => {
                   initProfileForm(user);
                   setActiveModal('profile');
                   setSystemMenuOpen(false);
                 }}
               >
-                <span className="menu-icon">👤</span>
-                <div className="menu-text">
-                  <strong>Driver Profile</strong>
-                  <small>Update email, phone & photo</small>
+                <span className="menu-icon text-lg">👤</span>
+                <div className="menu-text flex flex-col">
+                  <strong className="text-sm font-bold text-white">My Driver Profile</strong>
+                  <small className="text-xs text-slate-400">Update name, email, phone & picture</small>
                 </div>
               </div>
 
               <div
-                className="menu-item"
+                className="menu-item flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/5 cursor-pointer transition-colors"
                 onClick={() => {
                   setActiveModal('cars');
                   setSystemMenuOpen(false);
                 }}
               >
-                <span className="menu-icon">🚗</span>
-                <div className="menu-text">
-                  <strong>Manage Fleet Cars</strong>
-                  <small>Polo, Fiesta, i20 rotation</small>
+                <span className="menu-icon text-lg">🚗</span>
+                <div className="menu-text flex flex-col">
+                  <strong className="text-sm font-bold text-white">Fleet Management</strong>
+                  <small className="text-xs text-slate-400">Manage Polo, Fiesta, i20 & rotation</small>
                 </div>
               </div>
 
               <div
-                className="menu-item"
+                className="menu-item flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/5 cursor-pointer transition-colors"
                 onClick={() => {
                   setActiveModal('popia');
                   setSystemMenuOpen(false);
                 }}
               >
-                <span className="menu-icon">🛡️</span>
-                <div className="menu-text">
-                  <strong>POPIA Compliance</strong>
-                  <small>SA Privacy Act conditions</small>
+                <span className="menu-icon text-lg">🛡️</span>
+                <div className="menu-text flex flex-col">
+                  <strong className="text-sm font-bold text-white">POPIA Compliance</strong>
+                  <small className="text-xs text-slate-400">Act 4 of 2013 data protection audit</small>
                 </div>
               </div>
 
               <div
-                className="menu-item"
+                className="menu-item flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/5 cursor-pointer transition-colors"
                 onClick={() => {
                   setActiveModal('change_password');
                   setSystemMenuOpen(false);
                 }}
               >
-                <span className="menu-icon">🔑</span>
-                <div className="menu-text">
-                  <strong>Change Password</strong>
-                  <small>Update your login key</small>
+                <span className="menu-icon text-lg">🔑</span>
+                <div className="menu-text flex flex-col">
+                  <strong className="text-sm font-bold text-white">Change Password</strong>
+                  <small className="text-xs text-slate-400">Update private secret password</small>
                 </div>
               </div>
 
-              <div className="menu-divider"></div>
+              <div className="menu-divider h-px bg-white/10 my-1"></div>
 
               <div
-                className="menu-item menu-logout"
+                className="menu-item menu-logout flex items-center gap-3 p-2.5 rounded-xl hover:bg-rose-500/15 cursor-pointer transition-colors"
                 onClick={handleLogout}
               >
-                <span className="menu-icon">🚪</span>
-                <div className="menu-text">
-                  <strong style={{ color: '#f43f5e' }}>Sign Out</strong>
-                  <small>End driver session</small>
+                <span className="menu-icon text-lg">🚪</span>
+                <div className="menu-text flex flex-col">
+                  <strong className="text-sm font-bold text-rose-400">Sign Out</strong>
+                  <small className="text-xs text-rose-300/70">End active chauffeur session</small>
                 </div>
               </div>
             </div>
@@ -1088,44 +1229,44 @@ export default function Home() {
       </header>
 
       {/* QUICK STATS TILES */}
-      <section className="mobile-stats-row">
-        <div className="stat-tile">
-          <span className="stat-count">{totalTrips}</span>
-          <span className="stat-name">All Trips</span>
+      <section className="mobile-stats-row grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+        <div className="stat-tile flex flex-col items-center justify-center p-3 rounded-2xl bg-slate-900/60 border border-white/5 text-center">
+          <span className="stat-count text-2xl font-black text-white">{totalTrips}</span>
+          <span className="stat-name text-xs text-slate-400 font-bold mt-1 uppercase tracking-wider">All Trips</span>
         </div>
 
-        <div className="stat-tile tile-gold">
-          <span className="stat-count text-gold">{takeMeHomeCount}</span>
-          <span className="stat-name">Take Me Home<br /><small>(2 Drivers)</small></span>
+        <div className="stat-tile tile-gold flex flex-col items-center justify-center p-3 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-center">
+          <span className="stat-count text-2xl font-black text-amber-400">{takeMeHomeCount}</span>
+          <span className="stat-name text-xs text-amber-200/80 font-bold mt-1">Take Me Home<br /><small className="text-[10px] opacity-80">(2 Drivers)</small></span>
         </div>
 
-        <div className="stat-tile tile-cyan">
-          <span className="stat-count text-cyan">{chauffeurCount}</span>
-          <span className="stat-name">Chauffeur<br /><small>(1 Driver)</small></span>
+        <div className="stat-tile tile-cyan flex flex-col items-center justify-center p-3 rounded-2xl bg-cyan-500/10 border border-cyan-500/25 text-center">
+          <span className="stat-count text-2xl font-black text-cyan-400">{chauffeurCount}</span>
+          <span className="stat-name text-xs text-cyan-200/80 font-bold mt-1">Chauffeur<br /><small className="text-[10px] opacity-80">(1 Driver)</small></span>
         </div>
 
-        <div className="stat-tile tile-emerald">
-          <span className="stat-count text-emerald">{formatCurrency(totalEarnings)}</span>
-          <span className="stat-name">Total Fares</span>
+        <div className="stat-tile tile-emerald flex flex-col items-center justify-center p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-center">
+          <span className="stat-count text-xl sm:text-2xl font-black text-emerald-400">{formatCurrency(totalEarnings)}</span>
+          <span className="stat-name text-xs text-emerald-200/80 font-bold mt-1 uppercase tracking-wider">Total Fares</span>
         </div>
       </section>
 
       {/* FILTER TABS */}
-      <div className="mobile-filter-tabs">
+      <div className="mobile-filter-tabs flex gap-2 overflow-x-auto pb-1">
         <button
-          className={`filter-tab ${filter === 'all' ? 'active' : ''}`}
+          className={`filter-tab ${filter === 'all' ? 'active' : ''} px-4 py-2 rounded-xl text-xs font-black tracking-wide whitespace-nowrap transition-all`}
           onClick={() => setFilter('all')}
         >
           All ({totalTrips})
         </button>
         <button
-          className={`filter-tab ${filter === 'take_me_home' ? 'active' : ''}`}
+          className={`filter-tab ${filter === 'take_me_home' ? 'active' : ''} px-4 py-2 rounded-xl text-xs font-black tracking-wide whitespace-nowrap transition-all`}
           onClick={() => setFilter('take_me_home')}
         >
           🚗 Take Me Home ({takeMeHomeCount})
         </button>
         <button
-          className={`filter-tab ${filter === 'chauffeur' ? 'active' : ''}`}
+          className={`filter-tab ${filter === 'chauffeur' ? 'active' : ''} px-4 py-2 rounded-xl text-xs font-black tracking-wide whitespace-nowrap transition-all`}
           onClick={() => setFilter('chauffeur')}
         >
           🎩 Chauffeur ({chauffeurCount})
@@ -1133,14 +1274,14 @@ export default function Home() {
       </div>
 
       {/* =========================================================================
-          COMPACT, DECLUTTERED TRIP LIST (TAP ANY CARD FOR FULL DETAILS)
+          COMPACT, CLEAN TRIP LIST (TAP ANY CARD FOR FULL DETAILS)
           ========================================================================= */}
-      <section className="mobile-trip-list">
+      <section className="mobile-trip-list flex flex-col gap-3">
         {filteredTrips.length === 0 ? (
-          <div className="mobile-empty-card">
-            <p>No {filter === 'all' ? '' : filter.replace('_', ' ')} trips found in database.</p>
+          <div className="mobile-empty-card p-8 rounded-2xl bg-slate-900/60 border border-dashed border-white/10 text-center flex flex-col items-center gap-3">
+            <p className="text-slate-400 font-medium">No {filter === 'all' ? '' : filter.replace('_', ' ')} trips found in database.</p>
             <button
-              className="btn btn-gold btn-sm"
+              className="btn btn-gold btn-sm px-4 py-2 rounded-xl font-bold"
               onClick={() => setActiveModal('log_trip')}
             >
               + Log First Trip
@@ -1154,7 +1295,7 @@ export default function Home() {
             return (
               <article
                 key={tripId}
-                className={`compact-trip-card ${trip.status === 'in_progress' ? 'card-transit' : ''}`}
+                className={`compact-trip-card hover:border-cyan-500/40 hover:shadow-xl hover:shadow-cyan-500/10 active:scale-[0.985] transition-all cursor-pointer ${trip.status === 'in_progress' ? 'card-transit' : ''}`}
                 onClick={() => {
                   setSelectedTrip(trip);
                   setDetailNotesText(trip.notes || '');
@@ -1163,41 +1304,41 @@ export default function Home() {
                 }}
               >
                 {/* Card Header: Type Badge & Status */}
-                <div className="compact-card-header">
+                <div className="compact-card-header flex items-center justify-between">
                   <div className={`compact-type-badge ${isTakeMeHome ? 'type-tmh' : 'type-chauffeur'}`}>
                     {isTakeMeHome ? '🚗 Take Me Home (2 Drivers)' : '🎩 Chauffeur (1 Driver)'}
                   </div>
-                  <div className="compact-card-meta">
+                  <div className="compact-card-meta flex items-center gap-2">
                     <span className={`status-badge status-${trip.status}`}>
                       {trip.status === 'in_progress' ? '● On Road' : '✓ Done'}
                     </span>
-                    <span className="compact-time-text">{trip.date} • {trip.time}</span>
+                    <span className="compact-time-text font-mono text-xs text-slate-400">{trip.date} • {trip.time}</span>
                   </div>
                 </div>
 
                 {/* Client & Fare Row */}
-                <div className="compact-client-row">
-                  <div className="client-meta-col">
-                    <h3 className="compact-client-title">{trip.clientName}</h3>
+                <div className="compact-client-row flex items-start justify-between gap-3 mt-1">
+                  <div className="client-meta-col flex flex-col">
+                    <h3 className="compact-client-title text-base font-black text-white">{trip.clientName}</h3>
                     {isTakeMeHome && trip.clientCar && (
-                      <span className="compact-subcar">Client's <strong>{trip.clientCar}</strong></span>
+                      <span className="compact-subcar text-xs text-amber-300">Client's <strong>{trip.clientCar}</strong></span>
                     )}
                   </div>
-                  <div className="compact-fare-val">{formatCurrency(trip.fare)}</div>
+                  <div className="compact-fare-val text-lg font-black font-mono text-emerald-400">{formatCurrency(trip.fare)}</div>
                 </div>
 
                 {/* Route Snippet */}
-                <div className="compact-route-snippet">
-                  <span className="route-point-txt">📍 {trip.pickup}</span>
-                  <span className="route-arrow-txt">➔</span>
-                  <span className="route-point-txt">🏁 {trip.dropoff}</span>
+                <div className="compact-route-snippet flex items-center gap-2 p-2 rounded-lg bg-black/30 border border-white/5 text-xs text-slate-300">
+                  <span className="route-point-txt truncate max-w-[45%]">📍 {trip.pickup}</span>
+                  <span className="route-arrow-txt font-black text-amber-400">➔</span>
+                  <span className="route-point-txt truncate max-w-[45%]">🏁 {trip.dropoff}</span>
                 </div>
 
                 {/* Card Bottom: Drivers & View Details Button */}
-                <div className="compact-card-bottom">
-                  <div className="compact-drivers-summary">
+                <div className="compact-card-bottom flex items-center justify-between pt-2 border-t border-white/5">
+                  <div className="compact-drivers-summary flex items-center gap-1.5 text-xs text-slate-400 truncate max-w-[70%]">
                     <span className="driver-icon-sm">👤</span>
-                    <span className="driver-names-sm">
+                    <span className="driver-names-sm truncate">
                       {isTakeMeHome
                         ? `${trip.clientDriverName || 'Lead'} & ${trip.chaseDriverName || 'Chase'} (${trip.chaseCar || 'Escort'})`
                         : `${trip.driverName || 'Driver'} (${trip.car || 'Fleet'})`}
@@ -1205,7 +1346,7 @@ export default function Home() {
                   </div>
 
                   <div className="compact-action-row">
-                    <span className="compact-tap-hint">View Details ›</span>
+                    <span className="compact-tap-hint text-xs font-bold text-cyan-400 flex items-center gap-0.5">View Details ›</span>
                   </div>
                 </div>
               </article>
@@ -1215,13 +1356,17 @@ export default function Home() {
       </section>
 
       {/* MOBILE FLOATING ACTION BUTTON (LOG TRIP) */}
-      <div className="mobile-fab-container">
+      <div className="mobile-fab-container fixed bottom-6 right-6 z-40">
         <button
           type="button"
-          className="btn-fab-log"
+          className="btn-fab-log shadow-2xl shadow-amber-500/30 hover:scale-105 active:scale-95 transition-transform flex items-center gap-2 px-5 py-3.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black text-sm"
           onClick={() => setActiveModal('log_trip')}
         >
-          <span>+ Log Trip</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          <span>Log Trip</span>
         </button>
       </div>
 
@@ -1229,26 +1374,27 @@ export default function Home() {
           DEDICATED TRIP DETAIL MODAL (DECLUTTERED DETAIL VIEW)
           ========================================================================= */}
       {activeModal === 'trip_detail' && selectedTrip && (
-        <div className="modal-backdrop" onClick={() => setActiveModal(null)}>
-          <div className="trip-detail-dialog-card" onClick={e => e.stopPropagation()}>
-            <div className="detail-modal-card">
+        <div className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-md animate-fade-in" onClick={() => setActiveModal(null)}>
+          <div className="trip-detail-dialog-card w-full max-w-[500px] rounded-3xl overflow-hidden bg-slate-900 border border-white/10 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="detail-modal-card p-4 sm:p-5 flex flex-col gap-3.5 max-h-[85vh] overflow-y-auto">
+              
               {/* Top Navigation */}
-              <div className="detail-top-nav">
+              <div className="detail-top-nav flex items-center justify-between">
                 <button
                   type="button"
-                  className="btn-back-link"
+                  className="btn-back-link flex items-center gap-1.5 text-slate-400 hover:text-white text-xs font-bold transition-colors"
                   onClick={() => setActiveModal(null)}
                 >
-                  <span className="back-arrow">←</span>
+                  <span className="back-arrow text-base">←</span>
                   <span>Back to Trips</span>
                 </button>
-                <div className="detail-header-right">
+                <div className="detail-header-right flex items-center gap-2">
                   <span className={`status-pill status-${selectedTrip.status}`}>
                     {selectedTrip.status === 'completed' ? '✓ Completed' : '● In Transit'}
                   </span>
                   <button
                     type="button"
-                    className="modal-close"
+                    className="modal-close w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
                     onClick={() => setActiveModal(null)}
                   >
                     ✕
@@ -1257,129 +1403,129 @@ export default function Home() {
               </div>
 
               {/* Hero Header */}
-              <div className={`detail-hero-banner ${selectedTrip.type === 'take_me_home' ? 'hero-tmh' : 'hero-chauffeur'}`}>
-                <div className="hero-type-row">
-                  <span className="type-tag">
+              <div className={`detail-hero-banner p-4 rounded-2xl flex flex-col gap-2 ${selectedTrip.type === 'take_me_home' ? 'hero-tmh' : 'hero-chauffeur'}`}>
+                <div className="hero-type-row flex items-center justify-between text-xs font-mono">
+                  <span className="type-tag font-black">
                     {selectedTrip.type === 'take_me_home' ? '🚗 TAKE ME HOME' : '🎩 CHAUFFEUR'}
                   </span>
-                  <span className="detail-time-tag">{selectedTrip.date} • {selectedTrip.time}</span>
+                  <span className="detail-time-tag opacity-80">{selectedTrip.date} • {selectedTrip.time}</span>
                 </div>
-                <h2 className="detail-client-name">{selectedTrip.clientName}</h2>
+                <h2 className="detail-client-name text-2xl font-black text-white tracking-tight">{selectedTrip.clientName}</h2>
                 {selectedTrip.clientPhone && (
-                  <a href={`tel:${selectedTrip.clientPhone}`} className="detail-phone-btn">
+                  <a href={`tel:${selectedTrip.clientPhone}`} className="detail-phone-btn inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold w-fit">
                     <span>📞 Call {selectedTrip.clientPhone}</span>
                   </a>
                 )}
                 {selectedTrip.type === 'take_me_home' && selectedTrip.clientCar && (
-                  <div className="detail-client-car-badge">
+                  <div className="detail-client-car-badge text-xs px-2.5 py-1 rounded-md w-fit">
                     <span>Client Car: <strong>{selectedTrip.clientCar}</strong></span>
                   </div>
                 )}
               </div>
 
               {/* Route Section */}
-              <div className="detail-section-box">
-                <span className="section-micro-lbl">TRANSIT ROUTE</span>
-                <div className="detail-route-flow">
-                  <div className="route-step">
-                    <span className="route-marker pickup-marker"></span>
+              <div className="detail-section-box p-3.5 rounded-2xl bg-white/[0.03] border border-white/5 flex flex-col gap-2">
+                <span className="section-micro-lbl text-[11px] font-bold text-slate-400 uppercase tracking-wider">TRANSIT ROUTE</span>
+                <div className="detail-route-flow flex flex-col gap-1 pl-1">
+                  <div className="route-step flex items-start gap-3">
+                    <span className="route-marker pickup-marker w-3 h-3 rounded-full mt-1 shrink-0 bg-amber-400"></span>
                     <div>
-                      <span className="route-lbl">PICKUP VENUE</span>
-                      <p className="route-addr">{selectedTrip.pickup}</p>
+                      <span className="route-lbl text-[10px] font-bold text-slate-400 uppercase">PICKUP VENUE</span>
+                      <p className="route-addr text-sm font-semibold text-white">{selectedTrip.pickup}</p>
                     </div>
                   </div>
-                  <div className="route-step-line"></div>
-                  <div className="route-step">
-                    <span className="route-marker dropoff-marker"></span>
+                  <div className="route-step-line w-0.5 h-4 bg-white/20 ml-1.5"></div>
+                  <div className="route-step flex items-start gap-3">
+                    <span className="route-marker dropoff-marker w-3 h-3 rounded-full mt-1 shrink-0 bg-emerald-400"></span>
                     <div>
-                      <span className="route-lbl">DESTINATION</span>
-                      <p className="route-addr">{selectedTrip.dropoff}</p>
+                      <span className="route-lbl text-[10px] font-bold text-slate-400 uppercase">DESTINATION</span>
+                      <p className="route-addr text-sm font-semibold text-white">{selectedTrip.dropoff}</p>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Who Done It Section */}
-              <div className="detail-section-box who-box-accent">
-                <div className="section-title-row">
-                  <span className="section-micro-lbl">WHO DONE THIS TRIP</span>
-                  <span className="who-count-badge">
+              <div className="detail-section-box who-box-accent p-3.5 rounded-2xl bg-white/[0.03] border border-white/5 flex flex-col gap-2.5">
+                <div className="section-title-row flex items-center justify-between">
+                  <span className="section-micro-lbl text-[11px] font-bold text-slate-400 uppercase tracking-wider">WHO DONE THIS TRIP</span>
+                  <span className="who-count-badge text-[11px] font-bold px-2 py-0.5 rounded-full">
                     {selectedTrip.type === 'take_me_home' ? '2 Drivers' : '1 Driver'}
                   </span>
                 </div>
 
                 {selectedTrip.type === 'take_me_home' ? (
-                  <div className="detail-dual-drivers">
-                    <div className="detail-driver-item">
-                      <div className="driver-num-badge">1</div>
-                      <div>
-                        <span className="driver-role-title">Drove Client's Car</span>
-                        <strong className="driver-name-highlight">{selectedTrip.clientDriverName || 'Lead Driver'}</strong>
+                  <div className="detail-dual-drivers grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="detail-driver-item flex items-center gap-3 p-2.5 rounded-xl bg-slate-950/60 border border-white/5">
+                      <div className="driver-num-badge w-7 h-7 rounded-full flex items-center justify-center font-black text-xs shrink-0 bg-amber-400 text-slate-950">1</div>
+                      <div className="flex flex-col">
+                        <span className="driver-role-title text-[10px] text-slate-400 font-bold uppercase">Drove Client's Car</span>
+                        <strong className="driver-name-highlight text-sm text-white">{selectedTrip.clientDriverName || 'Lead Driver'}</strong>
                       </div>
                     </div>
 
-                    <div className="detail-driver-item">
-                      <div className="driver-num-badge badge-chase">2</div>
-                      <div>
-                        <span className="driver-role-title">Drove Escort Chase Car</span>
-                        <strong className="driver-name-highlight">{selectedTrip.chaseDriverName || 'Chase Driver'}</strong>
-                        <small className="chase-car-text">{selectedTrip.chaseCar || 'Fleet Escort'}</small>
+                    <div className="detail-driver-item flex items-center gap-3 p-2.5 rounded-xl bg-slate-950/60 border border-white/5">
+                      <div className="driver-num-badge badge-chase w-7 h-7 rounded-full flex items-center justify-center font-black text-xs shrink-0 bg-cyan-400 text-slate-950">2</div>
+                      <div className="flex flex-col">
+                        <span className="driver-role-title text-[10px] text-slate-400 font-bold uppercase">Drove Escort Chase Car</span>
+                        <strong className="driver-name-highlight text-sm text-white">{selectedTrip.chaseDriverName || 'Chase Driver'}</strong>
+                        <small className="chase-car-text text-xs text-amber-300 font-mono">{selectedTrip.chaseCar || 'Fleet Escort'}</small>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="detail-driver-item">
-                    <div className="driver-num-badge">🎩</div>
-                    <div>
-                      <span className="driver-role-title">Chauffeur Driver</span>
-                      <strong className="driver-name-highlight">{selectedTrip.driverName || 'Driver'}</strong>
-                      <small className="chase-car-text">Fleet Car: {selectedTrip.car || 'Commercial Fleet'}</small>
+                  <div className="detail-driver-item flex items-center gap-3 p-2.5 rounded-xl bg-slate-950/60 border border-white/5">
+                    <div className="driver-num-badge w-7 h-7 rounded-full flex items-center justify-center text-sm shrink-0 bg-cyan-400">🎩</div>
+                    <div className="flex flex-col">
+                      <span className="driver-role-title text-[10px] text-slate-400 font-bold uppercase">Chauffeur Driver</span>
+                      <strong className="driver-name-highlight text-sm text-white">{selectedTrip.driverName || 'Driver'}</strong>
+                      <small className="chase-car-text text-xs text-amber-300 font-mono">Fleet: {selectedTrip.car || 'Company Fleet'}</small>
                     </div>
                   </div>
                 )}
               </div>
 
               {/* Prominent Trip Notes with Live Edit */}
-              <div className="detail-section-box notes-box-gold">
-                <div className="section-title-row">
-                  <span className="section-micro-lbl">📝 TRIP NOTES & INSTRUCTIONS</span>
+              <div className="detail-section-box notes-box-gold p-3.5 rounded-2xl bg-white/[0.03] border border-white/5 flex flex-col gap-2">
+                <div className="section-title-row flex items-center justify-between">
+                  <span className="section-micro-lbl text-[11px] font-bold text-slate-400 uppercase tracking-wider">📝 TRIP NOTES & INSTRUCTIONS</span>
                   <button
                     type="button"
-                    className="btn-text-edit"
+                    className="btn-text-edit text-xs font-bold text-amber-400 hover:text-amber-300"
                     onClick={() => setIsEditingDetailNotes(prev => !prev)}
                   >
-                    {isEditingDetailNotes ? 'Cancel' : 'Edit'}
+                    {isEditingDetailNotes ? 'Cancel' : 'Edit Notes'}
                   </button>
                 </div>
 
                 {!isEditingDetailNotes ? (
-                  <p className="detail-notes-text">
+                  <p className="detail-notes-text text-xs text-slate-300 leading-relaxed whitespace-pre-wrap">
                     {selectedTrip.notes && selectedTrip.notes.trim() ? (
                       selectedTrip.notes
                     ) : (
-                      <em>No notes recorded for this trip yet.</em>
+                      <em className="text-slate-500">No notes recorded for this trip yet.</em>
                     )}
                   </p>
                 ) : (
-                  <div className="edit-notes-form">
+                  <div className="edit-notes-form flex flex-col gap-2">
                     <textarea
-                      className="modal-inp"
+                      className="modal-inp text-xs p-2.5 rounded-xl"
                       rows={3}
                       value={detailNotesText}
                       onChange={e => setDetailNotesText(e.target.value)}
                       placeholder="Enter gate codes, key handover info, etc..."
                     />
-                    <div className="edit-notes-actions">
+                    <div className="edit-notes-actions flex justify-end gap-2">
                       <button
                         type="button"
-                        className="btn btn-secondary btn-sm"
+                        className="btn btn-secondary btn-xs px-3 py-1.5"
                         onClick={() => setIsEditingDetailNotes(false)}
                       >
                         Cancel
                       </button>
                       <button
                         type="button"
-                        className="btn btn-gold btn-sm"
+                        className="btn btn-gold btn-xs px-3 py-1.5 font-bold"
                         onClick={handleSaveDetailNotes}
                       >
                         Save Notes
@@ -1390,33 +1536,33 @@ export default function Home() {
               </div>
 
               {/* Fare & Financials */}
-              <div className="detail-fare-card">
-                <span className="fare-card-lbl">Agreed Rate / Fare</span>
-                <span className="fare-card-val">{formatCurrency(selectedTrip.fare)}</span>
+              <div className="detail-fare-card flex items-center justify-between p-3.5 rounded-2xl">
+                <span className="fare-card-lbl text-xs font-bold uppercase tracking-wider">Agreed Service Fare</span>
+                <span className="fare-card-val text-xl font-black font-mono">{formatCurrency(selectedTrip.fare)}</span>
               </div>
 
               {/* Actions Stack */}
-              <div className="detail-actions-stack">
+              <div className="detail-actions-stack flex flex-col gap-2 pt-1">
                 <button
                   type="button"
-                  className="btn btn-gold btn-full btn-glow"
+                  className="btn btn-gold btn-full btn-glow py-3 rounded-xl font-black text-sm tracking-wide"
                   onClick={() => handlePrintPDF(selectedTrip)}
                 >
-                  <span>Print Official PDF Voucher</span>
+                  <span>🖨️ Print Official PDF Voucher</span>
                 </button>
 
-                <div className="detail-actions-row">
+                <div className="detail-actions-row grid grid-cols-5 gap-2">
                   <button
                     type="button"
-                    className={`btn ${selectedTrip.status === 'completed' ? 'btn-secondary' : 'btn-emerald'} btn-full`}
+                    className={`btn ${selectedTrip.status === 'completed' ? 'btn-secondary' : 'btn-emerald'} col-span-4 py-2.5 rounded-xl font-bold text-xs`}
                     onClick={() => handleToggleTripStatus(selectedTrip)}
                   >
-                    <span>{selectedTrip.status === 'completed' ? 'Mark In Progress' : 'Mark Completed'}</span>
+                    <span>{selectedTrip.status === 'completed' ? 'Mark In Progress' : '✓ Mark Completed'}</span>
                   </button>
 
                   <button
                     type="button"
-                    className="btn btn-danger-outline"
+                    className="btn btn-danger-outline col-span-1 py-2.5 rounded-xl flex items-center justify-center text-sm"
                     onClick={() => handleDeleteTrip(selectedTrip._id || selectedTrip.id)}
                     title="Delete Trip Record"
                   >
@@ -1434,42 +1580,42 @@ export default function Home() {
           DRIVER PROFILE MODAL (NAME, EMAIL, NUMBER, PIC, COLOR THEME)
           ========================================================================= */}
       {activeModal === 'profile' && (
-        <div className="modal-backdrop" onClick={() => setActiveModal(null)}>
-          <div className="modal-card" onClick={e => e.stopPropagation()}>
-            <div className="modal-top-bar">
+        <div className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-md animate-fade-in" onClick={() => setActiveModal(null)}>
+          <div className="modal-card w-full max-w-[460px] p-5 rounded-3xl bg-slate-900 border border-white/10 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="modal-top-bar flex items-center justify-between pb-3 border-b border-white/10 mb-4">
               <div>
-                <h2 className="modal-heading">Driver Profile</h2>
-                <small className="text-gold">Admin Chauffeur Credentials</small>
+                <h2 className="modal-heading text-lg font-black text-white">Driver Profile</h2>
+                <small className="text-gold text-xs font-semibold">Admin Chauffeur Credentials</small>
               </div>
               <button
                 type="button"
-                className="modal-close"
+                className="modal-close w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white"
                 onClick={() => setActiveModal(null)}
               >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleSaveProfile} className="modal-form">
+            <form onSubmit={handleSaveProfile} className="modal-form flex flex-col gap-3.5">
               {/* Profile Avatar Preview & Upload */}
-              <div className="profile-pic-section">
+              <div className="profile-pic-section flex items-center gap-4 p-3 rounded-2xl bg-white/[0.03] border border-white/5">
                 <div
-                  className="profile-avatar-preview"
+                  className="profile-avatar-preview w-16 h-16 rounded-full flex items-center justify-center overflow-hidden shrink-0 border-2 border-amber-400 shadow-lg shadow-amber-500/20"
                   style={{
                     background: profilePicBase64 ? 'transparent' : profileColor
                   }}
                 >
                   {profilePicBase64 ? (
-                    <img src={profilePicBase64} alt="Profile" className="avatar-img-preview" />
+                    <img src={profilePicBase64} alt="Profile" className="avatar-img-preview w-full h-full object-cover" />
                   ) : (
-                    <span className="avatar-letter-preview">
+                    <span className="avatar-letter-preview text-2xl font-black text-slate-950">
                       {(profileName || 'D').charAt(0).toUpperCase()}
                     </span>
                   )}
                 </div>
 
-                <div className="profile-pic-controls">
-                  <label className="btn btn-secondary btn-sm" htmlFor="inp-avatar-upload" style={{ cursor: 'pointer' }}>
+                <div className="profile-pic-controls flex flex-col gap-1.5">
+                  <label className="btn btn-secondary btn-xs py-1.5 px-3 rounded-lg cursor-pointer w-fit font-bold" htmlFor="inp-avatar-upload">
                     <span>📸 Upload Photo</span>
                   </label>
                   <input
@@ -1482,25 +1628,25 @@ export default function Home() {
                   {profilePicBase64 && (
                     <button
                       type="button"
-                      className="btn-clear-photo"
+                      className="btn-clear-photo text-xs text-rose-400 hover:underline text-left font-semibold"
                       onClick={() => setProfilePicBase64('')}
                     >
                       Remove Photo
                     </button>
                   )}
-                  <small className="text-muted">Max 2.5MB (JPG, PNG, WebP)</small>
+                  <small className="text-muted text-[11px] text-slate-400">Max 2.5MB (JPG, PNG, WebP)</small>
                 </div>
               </div>
 
               {/* Avatar Theme Color Selector */}
-              <div className="form-field">
-                <label className="form-lbl">Avatar Color Theme</label>
-                <div className="color-palette-row">
+              <div className="form-field flex flex-col gap-1">
+                <label className="form-lbl text-xs font-bold text-slate-300">Avatar Color Theme</label>
+                <div className="color-palette-row flex items-center gap-2 py-1">
                   {AVATAR_COLORS.map(c => (
                     <button
                       key={c}
                       type="button"
-                      className={`color-dot ${profileColor.toLowerCase() === c.toLowerCase() ? 'selected-color' : ''}`}
+                      className={`color-dot w-7 h-7 rounded-full transition-transform ${profileColor.toLowerCase() === c.toLowerCase() ? 'selected-color scale-110 ring-2 ring-white ring-offset-2 ring-offset-slate-900' : 'hover:scale-105'}`}
                       style={{ background: c }}
                       onClick={() => setProfileColor(c)}
                       title={c}
@@ -1511,11 +1657,11 @@ export default function Home() {
 
               {/* Driver Name */}
               <div className="form-field">
-                <label className="form-lbl" htmlFor="inp-edit-name">Full Driver Name *</label>
+                <label className="form-lbl text-xs font-bold" htmlFor="inp-edit-name">Full Driver Name *</label>
                 <input
                   type="text"
                   id="inp-edit-name"
-                  className="modal-inp"
+                  className="modal-inp text-xs"
                   value={profileName}
                   onChange={e => setProfileName(e.target.value)}
                   placeholder="e.g. Jabbz"
@@ -1525,11 +1671,11 @@ export default function Home() {
 
               {/* Email */}
               <div className="form-field">
-                <label className="form-lbl" htmlFor="inp-edit-email">Email Address *</label>
+                <label className="form-lbl text-xs font-bold" htmlFor="inp-edit-email">Email Address *</label>
                 <input
                   type="email"
                   id="inp-edit-email"
-                  className="modal-inp"
+                  className="modal-inp text-xs"
                   value={profileEmail}
                   onChange={e => setProfileEmail(e.target.value)}
                   placeholder="e.g. jabbz@tmh-fleet.co.za"
@@ -1539,11 +1685,11 @@ export default function Home() {
 
               {/* Phone */}
               <div className="form-field">
-                <label className="form-lbl" htmlFor="inp-edit-phone">Mobile Contact Number</label>
+                <label className="form-lbl text-xs font-bold" htmlFor="inp-edit-phone">Mobile Contact Number</label>
                 <input
                   type="tel"
                   id="inp-edit-phone"
-                  className="modal-inp"
+                  className="modal-inp text-xs"
                   value={profilePhone}
                   onChange={e => setProfilePhone(e.target.value)}
                   placeholder="e.g. +27 82 450 1198"
@@ -1551,29 +1697,29 @@ export default function Home() {
               </div>
 
               {/* Admin Callout */}
-              <div className="admin-profile-callout">
-                <span className="callout-shield">🛡️</span>
-                <div>
-                  <strong>Full Admin Powers Enabled</strong>
-                  <p>Role: Admin Chauffeur • Unrestricted access to fleet cars, dispatches, audits, and POPIA controls.</p>
+              <div className="admin-profile-callout p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-2.5">
+                <span className="callout-shield text-xl shrink-0">🛡️</span>
+                <div className="text-xs">
+                  <strong className="text-amber-300 font-bold block mb-0.5">Full Admin Powers Enabled</strong>
+                  <p className="text-slate-300 leading-tight">Role: Admin Chauffeur • Full rights over fleet rotation, dispatches, audits & POPIA.</p>
                 </div>
               </div>
 
               {/* Modal Actions */}
-              <div className="modal-actions">
+              <div className="modal-actions grid grid-cols-2 gap-2 pt-1">
                 <button
                   type="button"
-                  className="btn btn-secondary btn-full"
+                  className="btn btn-secondary btn-full py-2.5 rounded-xl font-bold text-xs"
                   onClick={() => setActiveModal(null)}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="btn btn-gold btn-full btn-glow"
+                  className="btn btn-gold btn-full btn-glow py-2.5 rounded-xl font-black text-xs"
                   disabled={profileSaving}
                 >
-                  {profileSaving ? 'Saving Profile...' : 'Save Profile Changes'}
+                  {profileSaving ? 'Saving...' : 'Save Profile Changes'}
                 </button>
               </div>
             </form>
@@ -1585,112 +1731,127 @@ export default function Home() {
           LOG NEW TRIP MODAL
           ========================================================================= */}
       {activeModal === 'log_trip' && (
-        <div className="modal-backdrop" onClick={() => setActiveModal(null)}>
-          <div className="modal-card" onClick={e => e.stopPropagation()}>
-            <div className="modal-top-bar">
+        <div className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-md animate-fade-in" onClick={() => setActiveModal(null)}>
+          <div className="modal-card w-full max-w-[480px] p-5 rounded-3xl bg-slate-900 border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="modal-top-bar flex items-center justify-between pb-3 border-b border-white/10 mb-3">
               <div>
-                <h2 className="modal-heading">Log New Service Trip</h2>
-                <small className="text-gold">Take Me Home (2 Drivers) or Chauffeur (1 Driver)</small>
+                <h2 className="modal-heading text-lg font-black text-white">Log New Service Trip</h2>
+                <small className="text-gold text-xs font-semibold">Take Me Home (2 Drivers) or Chauffeur (1 Driver)</small>
               </div>
               <button
                 type="button"
-                className="modal-close"
+                className="modal-close w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white"
                 onClick={() => setActiveModal(null)}
               >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleCreateTrip} className="modal-form">
-              {/* Trip Type Selector */}
-              <div className="form-field">
-                <label className="form-lbl">Trip Service Type *</label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                  <button
-                    type="button"
-                    className={`btn ${tripType === 'take_me_home' ? 'btn-gold' : 'btn-secondary'} btn-sm`}
-                    onClick={() => {
-                      setTripType('take_me_home');
-                      setTripFare(450);
-                    }}
-                  >
-                    🚗 Take Me Home (2 Drivers)
-                  </button>
-                  <button
-                    type="button"
-                    className={`btn ${tripType === 'chauffeur' ? 'btn-cyan' : 'btn-secondary'} btn-sm`}
-                    onClick={() => {
-                      setTripType('chauffeur');
-                      setTripFare(550);
-                    }}
-                  >
-                    🎩 Chauffeur (1 Driver)
-                  </button>
-                </div>
+            {/* Segmented Type Switcher */}
+            <div className="type-segmented-control grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-slate-950 border border-white/10 mb-3.5">
+              <button
+                type="button"
+                className={`seg-btn ${tripType === 'take_me_home' ? 'active' : ''} p-2.5 rounded-xl flex flex-col items-center justify-center transition-all`}
+                onClick={() => {
+                  setTripType('take_me_home');
+                  setTripFare(450);
+                }}
+              >
+                <span className="font-black text-xs">🚗 Take Me Home</span>
+                <small className="text-[10px] text-slate-400 mt-0.5">(2 Drivers Dispatched)</small>
+              </button>
+              <button
+                type="button"
+                className={`seg-btn ${tripType === 'chauffeur' ? 'active' : ''} p-2.5 rounded-xl flex flex-col items-center justify-center transition-all`}
+                onClick={() => {
+                  setTripType('chauffeur');
+                  setTripFare(550);
+                }}
+              >
+                <span className="font-black text-xs">🎩 Chauffeur</span>
+                <small className="text-[10px] text-slate-400 mt-0.5">(1 Driver Dispatched)</small>
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateTrip} className="modal-form flex flex-col gap-3">
+              {/* Callout hint */}
+              <div className={`form-callout-hint p-2.5 rounded-xl flex items-center gap-2 text-xs leading-tight ${tripType === 'take_me_home' ? 'bg-amber-500/10 border border-amber-500/25 text-amber-200' : 'bg-cyan-500/10 border border-cyan-500/25 text-cyan-200'}`}>
+                <span className="text-base">{tripType === 'take_me_home' ? '💡' : '🎩'}</span>
+                <span>
+                  {tripType === 'take_me_home'
+                    ? 'Drive client in their car. Requires 2 drivers (Lead Driver + Chase Escort Car).'
+                    : 'Transporting client using our company fleet car (1 driver dispatched).'}
+                </span>
               </div>
 
               {/* Drivers & Vehicle Assignment */}
               {tripType === 'take_me_home' ? (
                 <>
-                  <div className="form-field">
-                    <label className="form-lbl">Driver 1 (Drives Client's Vehicle) *</label>
-                    <select
-                      className="modal-inp"
-                      value={tripClientDriver}
-                      onChange={e => setTripClientDriver(e.target.value)}
-                    >
-                      <option value="Jabbz">Jabbz</option>
-                      <option value="Tebza">Tebza</option>
-                      <option value="Fresh">Fresh</option>
-                    </select>
+                  <div className="two-drivers-selector-box p-3 rounded-2xl bg-slate-950 border border-white/10 flex flex-col gap-2.5">
+                    <span className="box-title text-[11px] font-black text-amber-400 uppercase tracking-wider">ASSIGN THE 2 DRIVERS (WHO DONE THIS):</span>
+
+                    <div className="form-field">
+                      <label className="form-lbl text-xs font-bold">Driver 1: Drove Client's Car *</label>
+                      <select
+                        className="modal-select text-xs"
+                        value={tripClientDriver}
+                        onChange={e => setTripClientDriver(e.target.value)}
+                      >
+                        <option value="Jabbz">Jabbz (Client Car Chauffeur)</option>
+                        <option value="Tebza">Tebza (Client Car Chauffeur)</option>
+                        <option value="Fresh">Fresh (Client Car Chauffeur)</option>
+                      </select>
+                    </div>
+
+                    <div className="form-field">
+                      <label className="form-lbl text-xs font-bold">Driver 2: Drove Chase Escort Car *</label>
+                      <select
+                        className="modal-select text-xs"
+                        value={tripChaseDriver}
+                        onChange={e => setTripChaseDriver(e.target.value)}
+                      >
+                        <option value="Tebza">Tebza (Chase Car Escort)</option>
+                        <option value="Jabbz">Jabbz (Chase Car Escort)</option>
+                        <option value="Fresh">Fresh (Chase Car Escort)</option>
+                      </select>
+                    </div>
+
+                    <div className="form-field">
+                      <label className="form-lbl text-xs font-bold">Our Fleet Chase Vehicle *</label>
+                      <select
+                        className="modal-select text-xs"
+                        value={tripChaseCar}
+                        onChange={e => setTripChaseCar(e.target.value)}
+                      >
+                        {cars.map(c => (
+                          <option key={c._id || c.id} value={`${c.name} (${c.plate})`}>
+                            {c.name} ({c.plate})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
 
                   <div className="form-field">
-                    <label className="form-lbl">Driver 2 (Drives Escort Chase Car) *</label>
-                    <select
-                      className="modal-inp"
-                      value={tripChaseDriver}
-                      onChange={e => setTripChaseDriver(e.target.value)}
-                    >
-                      <option value="Tebza">Tebza</option>
-                      <option value="Jabbz">Jabbz</option>
-                      <option value="Fresh">Fresh</option>
-                    </select>
-                  </div>
-
-                  <div className="form-field">
-                    <label className="form-lbl">Escort Chase Car *</label>
-                    <select
-                      className="modal-inp"
-                      value={tripChaseCar}
-                      onChange={e => setTripChaseCar(e.target.value)}
-                    >
-                      {cars.map(c => (
-                        <option key={c._id || c.id} value={`${c.name} (${c.plate})`}>
-                          {c.name} ({c.plate})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="form-field">
-                    <label className="form-lbl" htmlFor="inp-client-car">Client's Vehicle Model</label>
+                    <label className="form-lbl text-xs font-bold" htmlFor="inp-client-car">Client's Vehicle Model *</label>
                     <input
                       type="text"
                       id="inp-client-car"
-                      className="modal-inp"
-                      placeholder="e.g. Audi Q7 or Mercedes C200"
+                      className="modal-inp text-xs"
+                      placeholder="e.g. Audi Q7 or BMW X3"
                       value={tripClientCar}
                       onChange={e => setTripClientCar(e.target.value)}
+                      required
                     />
                   </div>
                 </>
               ) : (
-                <>
+                <div className="two-drivers-selector-box p-3 rounded-2xl bg-slate-950 border border-white/10 flex flex-col gap-2.5">
+                  <span className="box-title text-[11px] font-black text-cyan-400 uppercase tracking-wider">CHAUFFEUR DRIVER & FLEET CAR:</span>
                   <div className="form-field">
-                    <label className="form-lbl">Chauffeur Driver *</label>
+                    <label className="form-lbl text-xs font-bold">Chauffeur Driver *</label>
                     <select
-                      className="modal-inp"
+                      className="modal-select text-xs"
                       value={tripChauffeurDriver}
                       onChange={e => setTripChauffeurDriver(e.target.value)}
                     >
@@ -1701,9 +1862,9 @@ export default function Home() {
                   </div>
 
                   <div className="form-field">
-                    <label className="form-lbl">Commercial Fleet Vehicle *</label>
+                    <label className="form-lbl text-xs font-bold">Commercial Fleet Vehicle *</label>
                     <select
-                      className="modal-inp"
+                      className="modal-select text-xs"
                       value={tripChauffeurCar}
                       onChange={e => setTripChauffeurCar(e.target.value)}
                     >
@@ -1714,16 +1875,16 @@ export default function Home() {
                       ))}
                     </select>
                   </div>
-                </>
+                </div>
               )}
 
               {/* Client Info */}
               <div className="form-field">
-                <label className="form-lbl" htmlFor="inp-log-client">Client Full Name *</label>
+                <label className="form-lbl text-xs font-bold" htmlFor="inp-log-client">Client / Passenger Name *</label>
                 <input
                   type="text"
                   id="inp-log-client"
-                  className="modal-inp"
+                  className="modal-inp text-xs"
                   placeholder="e.g. Dr. Michael Ndlovu"
                   value={tripClientName}
                   onChange={e => setTripClientName(e.target.value)}
@@ -1732,11 +1893,11 @@ export default function Home() {
               </div>
 
               <div className="form-field">
-                <label className="form-lbl" htmlFor="inp-log-phone">Client Contact Number</label>
+                <label className="form-lbl text-xs font-bold" htmlFor="inp-log-phone">Client Contact Number</label>
                 <input
                   type="tel"
                   id="inp-log-phone"
-                  className="modal-inp"
+                  className="modal-inp text-xs"
                   placeholder="e.g. +27 83 291 0041"
                   value={tripClientPhone}
                   onChange={e => setTripClientPhone(e.target.value)}
@@ -1745,11 +1906,11 @@ export default function Home() {
 
               {/* Route */}
               <div className="form-field">
-                <label className="form-lbl" htmlFor="inp-log-pickup">Pickup Address / Venue *</label>
+                <label className="form-lbl text-xs font-bold" htmlFor="inp-log-pickup">Pickup Address / Venue *</label>
                 <input
                   type="text"
                   id="inp-log-pickup"
-                  className="modal-inp"
+                  className="modal-inp text-xs"
                   placeholder="e.g. The Grillhouse, Rosebank Mall"
                   value={tripPickup}
                   onChange={e => setTripPickup(e.target.value)}
@@ -1758,11 +1919,11 @@ export default function Home() {
               </div>
 
               <div className="form-field">
-                <label className="form-lbl" htmlFor="inp-log-dropoff">Destination / Dropoff Address *</label>
+                <label className="form-lbl text-xs font-bold" htmlFor="inp-log-dropoff">Destination / Dropoff Address *</label>
                 <input
                   type="text"
                   id="inp-log-dropoff"
-                  className="modal-inp"
+                  className="modal-inp text-xs"
                   placeholder="e.g. 42 Cumberland Ave, Bryanston"
                   value={tripDropoff}
                   onChange={e => setTripDropoff(e.target.value)}
@@ -1770,25 +1931,34 @@ export default function Home() {
                 />
               </div>
 
-              {/* Fare */}
-              <div className="form-field">
-                <label className="form-lbl" htmlFor="inp-log-fare">Agreed Fare (ZAR Rands) *</label>
-                <input
-                  type="number"
-                  id="inp-log-fare"
-                  className="modal-inp"
-                  value={tripFare}
-                  onChange={e => setTripFare(e.target.value)}
-                  required
-                />
+              {/* Fare & Notes */}
+              <div className="grid grid-cols-2 gap-2">
+                <div className="form-field">
+                  <label className="form-lbl text-xs font-bold" htmlFor="inp-log-fare">Agreed Fare (ZAR) *</label>
+                  <input
+                    type="number"
+                    id="inp-log-fare"
+                    className="modal-inp text-xs font-mono font-bold text-emerald-400"
+                    value={tripFare}
+                    onChange={e => setTripFare(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="form-field">
+                  <label className="form-lbl text-xs font-bold">Status</label>
+                  <select className="modal-select text-xs">
+                    <option value="completed">✓ Completed</option>
+                    <option value="in_progress">● Currently on Road</option>
+                  </select>
+                </div>
               </div>
 
-              {/* Trip Notes */}
               <div className="form-field">
-                <label className="form-lbl" htmlFor="inp-log-notes">Trip Notes & Audit Details</label>
+                <label className="form-lbl text-xs font-bold" htmlFor="inp-log-notes">📝 Trip Notes & Instructions</label>
                 <textarea
                   id="inp-log-notes"
-                  className="modal-inp"
+                  className="modal-inp text-xs"
                   rows={2}
                   placeholder="Gate code, key handover, specific route instructions..."
                   value={tripNotes}
@@ -1796,17 +1966,17 @@ export default function Home() {
                 />
               </div>
 
-              <div className="modal-actions">
+              <div className="modal-actions grid grid-cols-2 gap-2 pt-2">
                 <button
                   type="button"
-                  className="btn btn-secondary btn-full"
+                  className="btn btn-secondary btn-full py-2.5 rounded-xl font-bold text-xs"
                   onClick={() => setActiveModal(null)}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="btn btn-gold btn-full btn-glow"
+                  className="btn btn-gold btn-full btn-glow py-2.5 rounded-xl font-black text-xs"
                   disabled={tripSaving}
                 >
                   {tripSaving ? 'Logging Trip...' : 'Confirm & Log Trip'}
@@ -1821,16 +1991,16 @@ export default function Home() {
           MANAGE FLEET CARS MODAL (POLO, FIESTA, I20 CRUD)
           ========================================================================= */}
       {activeModal === 'cars' && (
-        <div className="modal-backdrop" onClick={() => setActiveModal(null)}>
-          <div className="modal-card" onClick={e => e.stopPropagation()}>
-            <div className="modal-top-bar">
+        <div className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-md animate-fade-in" onClick={() => setActiveModal(null)}>
+          <div className="modal-card w-full max-w-[460px] p-5 rounded-3xl bg-slate-900 border border-white/10 shadow-2xl max-h-[88vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="modal-top-bar flex items-center justify-between pb-3 border-b border-white/10 mb-3">
               <div>
-                <h2 className="modal-heading">Fleet Vehicles Management</h2>
-                <small className="text-gold">VW Polo, Ford Fiesta, Hyundai i20 Rotation</small>
+                <h2 className="modal-heading text-lg font-black text-white">Fleet Vehicles Management</h2>
+                <small className="text-gold text-xs font-semibold">VW Polo, Ford Fiesta, Hyundai i20 Rotation</small>
               </div>
               <button
                 type="button"
-                className="modal-close"
+                className="modal-close w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white"
                 onClick={() => setActiveModal(null)}
               >
                 ✕
@@ -1838,30 +2008,22 @@ export default function Home() {
             </div>
 
             {/* List of active cars */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', marginBottom: '1.25rem' }}>
+            <div className="flex flex-col gap-2 mb-4">
               {cars.map(c => (
                 <div
                   key={c._id || c.id}
-                  style={{
-                    background: 'rgba(255,255,255,0.04)',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    borderRadius: '8px',
-                    padding: '0.75rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between'
-                  }}
+                  className="p-3 rounded-2xl bg-white/[0.03] border border-white/5 flex items-center justify-between hover:bg-white/[0.05] transition-colors"
                 >
-                  <div>
-                    <strong style={{ color: '#fff', fontSize: '0.9rem', display: 'block' }}>{c.name}</strong>
-                    <span style={{ fontSize: '0.75rem', color: '#fbbf24', fontFamily: 'monospace' }}>{c.plate}</span>
-                    <span style={{ fontSize: '0.72rem', color: '#94a3b8', display: 'block' }}>
+                  <div className="flex flex-col">
+                    <strong className="text-sm font-bold text-white">{c.name}</strong>
+                    <span className="text-xs text-amber-400 font-mono font-bold">{c.plate}</span>
+                    <span className="text-[11px] text-slate-400 mt-0.5">
                       {c.color} • {c.fuelPercent || 90}% Fuel • {c.odometerKm || 35000} km
                     </span>
                   </div>
                   <button
                     type="button"
-                    className="btn btn-danger-outline btn-xs"
+                    className="btn btn-danger-outline btn-xs px-2.5 py-1.5 rounded-lg text-xs"
                     onClick={() => handleDeleteCar(c._id || c.id)}
                     title="Remove Car"
                   >
@@ -1872,15 +2034,15 @@ export default function Home() {
             </div>
 
             {/* Add Car Form */}
-            <form onSubmit={handleAddCar} className="modal-form" style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem' }}>
-              <span className="section-micro-lbl">REGISTER NEW FLEET CAR</span>
+            <form onSubmit={handleAddCar} className="modal-form flex flex-col gap-3 pt-3 border-t border-white/10">
+              <span className="section-micro-lbl text-[11px] font-black text-cyan-400 uppercase tracking-wider">REGISTER NEW FLEET CAR</span>
 
               <div className="form-field">
-                <label className="form-lbl" htmlFor="inp-car-name">Car Nickname *</label>
+                <label className="form-lbl text-xs font-bold" htmlFor="inp-car-name">Car Nickname *</label>
                 <input
                   type="text"
                   id="inp-car-name"
-                  className="modal-inp"
+                  className="modal-inp text-xs"
                   placeholder="e.g. VW Polo Hatch"
                   value={newCarName}
                   onChange={e => setNewCarName(e.target.value)}
@@ -1889,11 +2051,11 @@ export default function Home() {
               </div>
 
               <div className="form-field">
-                <label className="form-lbl" htmlFor="inp-car-model">Model & Engine *</label>
+                <label className="form-lbl text-xs font-bold" htmlFor="inp-car-model">Model & Engine *</label>
                 <input
                   type="text"
                   id="inp-car-model"
-                  className="modal-inp"
+                  className="modal-inp text-xs"
                   placeholder="e.g. Polo TSI Comfortline"
                   value={newCarModel}
                   onChange={e => setNewCarModel(e.target.value)}
@@ -1902,11 +2064,11 @@ export default function Home() {
               </div>
 
               <div className="form-field">
-                <label className="form-lbl" htmlFor="inp-car-plate">License Plate *</label>
+                <label className="form-lbl text-xs font-bold" htmlFor="inp-car-plate">License Plate *</label>
                 <input
                   type="text"
                   id="inp-car-plate"
-                  className="modal-inp"
+                  className="modal-inp text-xs font-mono"
                   placeholder="e.g. GP 884-POL"
                   value={newCarPlate}
                   onChange={e => setNewCarPlate(e.target.value)}
@@ -1914,17 +2076,17 @@ export default function Home() {
                 />
               </div>
 
-              <div className="modal-actions">
+              <div className="modal-actions grid grid-cols-2 gap-2 pt-1">
                 <button
                   type="button"
-                  className="btn btn-secondary btn-full"
+                  className="btn btn-secondary btn-full py-2.5 rounded-xl font-bold text-xs"
                   onClick={() => setActiveModal(null)}
                 >
                   Close
                 </button>
                 <button
                   type="submit"
-                  className="btn btn-cyan btn-full"
+                  className="btn btn-cyan btn-full py-2.5 rounded-xl font-black text-xs text-slate-950"
                   disabled={carSaving}
                 >
                   {carSaving ? 'Registering...' : '+ Add to Fleet'}
@@ -1939,68 +2101,68 @@ export default function Home() {
           POPIA COMPLIANCE MODAL
           ========================================================================= */}
       {activeModal === 'popia' && (
-        <div className="modal-backdrop" onClick={() => setActiveModal(null)}>
-          <div className="modal-card" onClick={e => e.stopPropagation()}>
-            <div className="modal-top-bar">
+        <div className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-md animate-fade-in" onClick={() => setActiveModal(null)}>
+          <div className="modal-card w-full max-w-[460px] p-5 rounded-3xl bg-slate-900 border border-white/10 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="modal-top-bar flex items-center justify-between pb-3 border-b border-white/10 mb-3">
               <div>
-                <h2 className="modal-heading">POPIA Compliance Notice</h2>
-                <small className="text-emerald">Protection of Personal Information Act (Act 4 of 2013)</small>
+                <h2 className="modal-heading text-lg font-black text-white">POPIA Compliance Notice</h2>
+                <small className="text-emerald-400 text-xs font-semibold">Protection of Personal Information Act (Act 4 of 2013)</small>
               </div>
               <button
                 type="button"
-                className="modal-close"
+                className="modal-close w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white"
                 onClick={() => setActiveModal(null)}
               >
                 ✕
               </button>
             </div>
 
-            <div className="popia-status-badge" style={{ marginBottom: '1rem' }}>
-              <span className="status-icon">🛡️</span>
-              <div>
-                <strong>Active POPIA Safeguards</strong>
-                <p>Personal and transit information is encrypted and processed strictly in line with statutory mandates.</p>
+            <div className="popia-status-badge p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-3 mb-3">
+              <span className="status-icon text-2xl">🛡️</span>
+              <div className="text-xs">
+                <strong className="text-emerald-300 font-bold block">Active POPIA Safeguards</strong>
+                <p className="text-slate-300 leading-tight">Personal & transit data is encrypted and processed strictly in line with statutory mandates.</p>
               </div>
             </div>
 
-            <div className="popia-section" style={{ maxHeight: '300px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-              <div className="popia-condition-card">
-                <span className="cond-num">1</span>
-                <div>
-                  <strong>Condition 1: Accountability</strong>
-                  <p>All drivers (Jabbz, Tebza, Fresh) uphold responsible processing standards for client names, addresses, and vehicles.</p>
+            <div className="popia-section flex flex-col gap-2 max-h-[260px] overflow-y-auto pr-1">
+              <div className="popia-condition-card p-3 rounded-xl bg-white/[0.03] border border-white/5 flex items-start gap-2.5">
+                <span className="cond-num w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shrink-0 bg-cyan-500/20 text-cyan-400">1</span>
+                <div className="text-xs">
+                  <strong className="text-white font-bold block mb-0.5">Condition 1: Accountability</strong>
+                  <p className="text-slate-400">Jabbz, Tebza, and Fresh uphold responsible processing standards for client names, routes, and vehicles.</p>
                 </div>
               </div>
 
-              <div className="popia-condition-card">
-                <span className="cond-num">2</span>
-                <div>
-                  <strong>Condition 2: Processing Limitation</strong>
-                  <p>Client information is processed solely for insurance dispatch, vehicle escort transit, and billing verification.</p>
+              <div className="popia-condition-card p-3 rounded-xl bg-white/[0.03] border border-white/5 flex items-start gap-2.5">
+                <span className="cond-num w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shrink-0 bg-cyan-500/20 text-cyan-400">2</span>
+                <div className="text-xs">
+                  <strong className="text-white font-bold block mb-0.5">Condition 2: Processing Limitation</strong>
+                  <p className="text-slate-400">Information is collected with consent solely for insurance dispatch, return escort, and billing verification.</p>
                 </div>
               </div>
 
-              <div className="popia-condition-card">
-                <span className="cond-num">3</span>
-                <div>
-                  <strong>Condition 3: Purpose Specification</strong>
-                  <p>Data collected during booking is retained only as long as necessary for insurance service audit trails.</p>
+              <div className="popia-condition-card p-3 rounded-xl bg-white/[0.03] border border-white/5 flex items-start gap-2.5">
+                <span className="cond-num w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shrink-0 bg-cyan-500/20 text-cyan-400">3</span>
+                <div className="text-xs">
+                  <strong className="text-white font-bold block mb-0.5">Condition 3: Purpose Specification</strong>
+                  <p className="text-slate-400">Booking records are retained only as long as necessary for insurance service audit trails.</p>
                 </div>
               </div>
 
-              <div className="popia-condition-card">
-                <span className="cond-num">7</span>
-                <div>
-                  <strong>Condition 7: Security Safeguards</strong>
-                  <p>Encrypted MongoDB connections, authenticated JWT sessions, and zero plain-text passwords.</p>
+              <div className="popia-condition-card p-3 rounded-xl bg-white/[0.03] border border-white/5 flex items-start gap-2.5">
+                <span className="cond-num w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shrink-0 bg-cyan-500/20 text-cyan-400">7</span>
+                <div className="text-xs">
+                  <strong className="text-white font-bold block mb-0.5">Condition 7: Security Safeguards</strong>
+                  <p className="text-slate-400">Encrypted MongoDB connections, authenticated JWT sessions, and zero plain-text passwords.</p>
                 </div>
               </div>
             </div>
 
-            <div className="modal-actions" style={{ marginTop: '1.25rem' }}>
+            <div className="modal-actions pt-3">
               <button
                 type="button"
-                className="btn btn-gold btn-full"
+                className="btn btn-gold btn-full py-2.5 rounded-xl font-bold text-xs"
                 onClick={() => setActiveModal(null)}
               >
                 Understood & Acknowledged
@@ -2014,29 +2176,29 @@ export default function Home() {
           CHANGE PASSWORD MODAL (VOLUNTARY)
           ========================================================================= */}
       {activeModal === 'change_password' && (
-        <div className="modal-backdrop" onClick={() => setActiveModal(null)}>
-          <div className="modal-card" onClick={e => e.stopPropagation()}>
-            <div className="modal-top-bar">
+        <div className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-md animate-fade-in" onClick={() => setActiveModal(null)}>
+          <div className="modal-card w-full max-w-[420px] p-5 rounded-3xl bg-slate-900 border border-white/10 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="modal-top-bar flex items-center justify-between pb-3 border-b border-white/10 mb-3">
               <div>
-                <h2 className="modal-heading">Change Driver Password</h2>
-                <small className="text-gold">Update your secure access key</small>
+                <h2 className="modal-heading text-lg font-black text-white">Change Driver Password</h2>
+                <small className="text-gold text-xs font-semibold">Update your secure access key</small>
               </div>
               <button
                 type="button"
-                className="modal-close"
+                className="modal-close w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white"
                 onClick={() => setActiveModal(null)}
               >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleChangePassword} className="modal-form">
+            <form onSubmit={handleChangePassword} className="modal-form flex flex-col gap-3">
               <div className="form-field">
-                <label className="form-lbl" htmlFor="inp-cur-pw">Current Password</label>
+                <label className="form-lbl text-xs font-bold" htmlFor="inp-cur-pw">Current Password</label>
                 <input
                   type="password"
                   id="inp-cur-pw"
-                  className="modal-inp"
+                  className="modal-inp text-xs"
                   value={currentPassword}
                   onChange={e => setCurrentPassword(e.target.value)}
                   placeholder="Enter your current password"
@@ -2044,11 +2206,11 @@ export default function Home() {
               </div>
 
               <div className="form-field">
-                <label className="form-lbl" htmlFor="inp-n-pw">New Password (min 6 chars) *</label>
+                <label className="form-lbl text-xs font-bold" htmlFor="inp-n-pw">New Password (min 6 chars) *</label>
                 <input
                   type="password"
                   id="inp-n-pw"
-                  className="modal-inp"
+                  className="modal-inp text-xs"
                   value={newPassword}
                   onChange={e => setNewPassword(e.target.value)}
                   placeholder="Enter new password"
@@ -2057,11 +2219,11 @@ export default function Home() {
               </div>
 
               <div className="form-field">
-                <label className="form-lbl" htmlFor="inp-c-pw">Confirm New Password *</label>
+                <label className="form-lbl text-xs font-bold" htmlFor="inp-c-pw">Confirm New Password *</label>
                 <input
                   type="password"
                   id="inp-c-pw"
-                  className="modal-inp"
+                  className="modal-inp text-xs"
                   value={confirmPassword}
                   onChange={e => setConfirmPassword(e.target.value)}
                   placeholder="Confirm new password"
@@ -2069,17 +2231,17 @@ export default function Home() {
                 />
               </div>
 
-              <div className="modal-actions">
+              <div className="modal-actions grid grid-cols-2 gap-2 pt-2">
                 <button
                   type="button"
-                  className="btn btn-secondary btn-full"
+                  className="btn btn-secondary btn-full py-2.5 rounded-xl font-bold text-xs"
                   onClick={() => setActiveModal(null)}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="btn btn-gold btn-full btn-glow"
+                  className="btn btn-gold btn-full btn-glow py-2.5 rounded-xl font-black text-xs"
                   disabled={pwLoading}
                 >
                   {pwLoading ? 'Saving...' : 'Update Password'}
@@ -2090,6 +2252,6 @@ export default function Home() {
         </div>
       )}
 
-    </main>
+    </div>
   );
 }
