@@ -1,8 +1,8 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'Take Me Home | Jabbz, Tebza & Fresh Trip Tracker',
-  description: 'Luxury Take Me Home & Chauffeur trip tracking app for Jabbz, Tebza, and Fresh with dynamic fleet rotation, live PDF voucher generation, and POPIA compliance.'
+  title: 'Take Me Home | Trip Tracker',
+  description: 'Take Me Home trip tracking app'
 };
 
 export const viewport = {
