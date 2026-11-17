@@ -252,7 +252,12 @@ export default function TripDetailModal({
                   : 'bg-gradient-to-br from-cyan-500/15 via-slate-900 to-slate-900 border-cyan-500/30 shadow-lg shadow-cyan-500/5'
               }`}>
                 <div className="flex items-center justify-between text-xs font-mono">
-                  <ServiceBadge type={trip.type} />
+                  <div className="flex items-center gap-2">
+                    <ServiceBadge type={trip.type} />
+                    <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-indigo-300">
+                      {trip.profile === 'profile2' ? 'Profile 2' : 'Profile 1'}
+                    </span>
+                  </div>
                   <span className="text-slate-400 font-semibold">{trip.date} • {trip.time}</span>
                 </div>
 

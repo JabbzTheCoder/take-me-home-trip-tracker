@@ -42,9 +42,14 @@ function TripCard({
       } hover:-translate-y-0.5 active:scale-[0.985]`}
       onClick={() => onSelect(trip)}
     >
-      {/* 1. Header Row: Service Badge, Status Badge, Time */}
+      {/* 1. Header Row: Service Badge, Profile Tag, Status Badge, Time */}
       <div className="flex items-center justify-between gap-2">
-        <ServiceBadge type={trip.type} />
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <ServiceBadge type={trip.type} />
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/25 text-indigo-300">
+            {trip.profile === 'profile2' ? 'Profile 2' : 'Profile 1'}
+          </span>
+        </div>
 
         <div className="flex items-center gap-2">
           <StatusBadge status={trip.status} showLock={isDone} />

@@ -571,6 +571,7 @@ export default function Home() {
         <MandatoryPasswordChange
           user={user}
           onComplete={handleMandatoryPasswordChange}
+          onLogout={handleLogout}
         />
         <ToastContainer toasts={toasts} />
       </AppShell>
@@ -648,6 +649,7 @@ export default function Home() {
         onClose={handleCloseModal}
         currentUser={user}
         onSave={handleUpdateProfile}
+        onLogout={handleLogout}
       />
 
       <TaxInvoiceModal

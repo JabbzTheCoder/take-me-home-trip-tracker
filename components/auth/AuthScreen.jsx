@@ -13,6 +13,7 @@ export default function AuthScreen({ onLogin, onRegister }) {
   const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [selectedPreset, setSelectedPreset] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -23,8 +24,15 @@ export default function AuthScreen({ onLogin, onRegister }) {
   const [regPassword, setRegPassword] = useState('');
 
   const handlePresetSelect = (preset) => {
+    setSelectedPreset(preset.name);
     setEmail(preset.email);
     setPassword('driver123');
+  };
+
+  const handleClearPreset = () => {
+    setSelectedPreset(null);
+    setEmail('');
+    setPassword('');
   };
 
   const handleLoginSubmit = async (e) => {
@@ -130,23 +138,44 @@ export default function AuthScreen({ onLogin, onRegister }) {
 
             {/* Quick 1-Click Driver Preset Buttons */}
             <div className="pt-1">
-              <span className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
-                1-CLICK CHAUFFEUR LOGIN PRESET
-              </span>
-              <div className="grid grid-cols-3 gap-2">
-                {PRESETS.map(p => (
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                  Driver Profile Preset
+                </span>
+                {selectedPreset && (
                   <button
-                    key={p.name}
                     type="button"
-                    onClick={() => handlePresetSelect(p)}
-                    className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-white/[0.04] border border-white/10 hover:border-amber-400/50 hover:bg-white/[0.08] active:scale-95 transition-all text-center"
+                    onClick={handleClearPreset}
+                    className="text-[11px] text-amber-400 hover:text-white font-bold underline"
                   >
-                    <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-black text-slate-950 mb-1" style={{ background: p.color }}>
-                      {p.name.charAt(0)}
-                    </span>
-                    <strong className="text-xs text-white">{p.name}</strong>
+                    Clear Selection
                   </button>
-                ))}
+                )}
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {PRESETS.map(p => {
+                  const isSelected = selectedPreset === p.name || email === p.email;
+                  return (
+                    <button
+                      key={p.name}
+                      type="button"
+                      onClick={() => handlePresetSelect(p)}
+                      className={`flex flex-col items-center justify-center p-2.5 rounded-xl border active:scale-95 transition-all text-center relative ${
+                        isSelected
+                          ? 'bg-amber-400/20 border-amber-400 shadow-md shadow-amber-500/20 ring-1 ring-amber-400'
+                          : 'bg-white/[0.04] border-white/10 hover:border-amber-400/50 hover:bg-white/[0.08]'
+                      }`}
+                    >
+                      <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-black text-slate-950 mb-1" style={{ background: p.color }}>
+                        {p.name.charAt(0)}
+                      </span>
+                      <strong className="text-xs text-white">{p.name}</strong>
+                      {isSelected && (
+                        <span className="text-[9px] font-bold text-amber-300 mt-0.5">✓ Selected</span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 

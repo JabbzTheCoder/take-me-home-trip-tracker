@@ -9,7 +9,8 @@ export default function ProfileModal({
   isOpen,
   onClose,
   currentUser,
-  onSave
+  onSave,
+  onLogout
 }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -187,21 +188,37 @@ export default function ProfileModal({
           </div>
 
           {/* Sticky Actions */}
-          <div className="sticky bottom-0 z-20 bg-slate-900/98 backdrop-blur-md pt-3 pb-1 border-t border-white/10 flex gap-2.5 mt-2">
-            <button
-              type="button"
-              className="btn btn-secondary flex-1 py-3 rounded-xl text-xs font-bold"
-              onClick={onClose}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="btn btn-gold btn-glow flex-1 py-3 rounded-xl text-xs font-black"
-            >
-              {saving ? 'Saving...' : 'Save Profile Changes'}
-            </button>
+          <div className="sticky bottom-0 z-20 bg-slate-900/98 backdrop-blur-md pt-3 pb-1 border-t border-white/10 flex flex-col gap-2.5 mt-2">
+            <div className="flex gap-2.5">
+              <button
+                type="button"
+                className="btn btn-secondary flex-1 py-3 rounded-xl text-xs font-bold"
+                onClick={onClose}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={saving}
+                className="btn btn-gold btn-glow flex-1 py-3 rounded-xl text-xs font-black"
+              >
+                {saving ? 'Saving...' : 'Save Profile Changes'}
+              </button>
+            </div>
+
+            {onLogout && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onLogout();
+                }}
+                className="w-full py-2 px-3 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 active:scale-95"
+              >
+                <span>🔄</span>
+                <span>Wrong Profile? Switch Driver / Sign Out</span>
+              </button>
+            )}
           </div>
         </form>
       </div>

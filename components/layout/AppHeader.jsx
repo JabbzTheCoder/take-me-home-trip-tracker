@@ -76,6 +76,16 @@ function AppHeader({ user, onOpenModal, onLogout }) {
 
         <button
           type="button"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800/80 hover:bg-rose-500/15 border border-white/10 hover:border-rose-500/30 text-slate-300 hover:text-rose-300 text-xs font-bold transition-all active:scale-95 shadow-sm"
+          onClick={onLogout}
+          title="Switch driver account / Return to Sign In"
+        >
+          <span>🔄</span>
+          <span className="hidden xs:inline sm:inline">Switch Driver</span>
+        </button>
+
+        <button
+          type="button"
           className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-lg hover:bg-white/10 hover:border-white/20 active:scale-95 transition-all text-slate-300 hover:text-white"
           onClick={() => setMenuOpen(prev => !prev)}
           title="Settings & System Menu"
@@ -154,8 +164,8 @@ function AppHeader({ user, onOpenModal, onLogout }) {
             >
               <span className="text-lg">🚪</span>
               <div className="flex flex-col">
-                <strong className="text-sm font-bold text-rose-400">Sign Out</strong>
-                <small className="text-xs text-rose-300/70">End driver session</small>
+                <strong className="text-sm font-bold text-rose-400">Switch Driver / Sign Out</strong>
+                <small className="text-xs text-rose-300/70">Return to driver selection</small>
               </div>
             </div>
           </div>

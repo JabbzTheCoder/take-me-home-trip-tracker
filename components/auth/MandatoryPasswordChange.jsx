@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 
-export default function MandatoryPasswordChange({ user, onComplete }) {
+export default function MandatoryPasswordChange({ user, onComplete, onLogout }) {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -86,6 +86,21 @@ export default function MandatoryPasswordChange({ user, onComplete }) {
             {loading ? 'Securing Account...' : 'Set My Private Password & Enter'}
           </button>
         </form>
+
+        {/* Back to Sign In Option */}
+        <div className="pt-2 text-center border-t border-white/10 flex flex-col items-center gap-2">
+          <p className="text-xs text-slate-400">
+            Selected the wrong driver profile?
+          </p>
+          <button
+            type="button"
+            onClick={onLogout}
+            className="w-full py-2.5 px-4 rounded-xl text-xs font-bold text-amber-300 hover:text-amber-200 bg-white/5 hover:bg-white/10 border border-white/10 transition-all flex items-center justify-center gap-2 active:scale-95"
+          >
+            <span>←</span>
+            <span>Return to Sign In (Select Different Driver)</span>
+          </button>
+        </div>
       </div>
     </div>
   );

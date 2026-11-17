@@ -51,12 +51,14 @@ export async function POST(req) {
       car,
       fare,
       status,
+      deferReason,
       extraCosts,
       splits,
       splitStops,
       notes,
       date,
-      time
+      time,
+      profile
     } = body;
 
     if (!type || !clientName || !pickup || !dropoff) {
@@ -73,6 +75,7 @@ export async function POST(req) {
       clientCar: clientCar || '',
       pickup,
       dropoff,
+      profile: profile || 'profile1',
       clientDriverName: clientDriverName || '',
       chaseDriverName: chaseDriverName || '',
       chaseCar: chaseCar || '',

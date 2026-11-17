@@ -28,6 +28,7 @@ export default function LogTripModal({
   });
   const [tripStatus, setTripStatus] = useState('completed');
   const [cancelPauseReason, setCancelPauseReason] = useState('');
+  const [profile, setProfile] = useState('profile1');
   const [fare, setFare] = useState(450);
   const [initialFuelAmount, setInitialFuelAmount] = useState('');
   const [initialFuelPaidBy, setInitialFuelPaidBy] = useState('');
@@ -60,6 +61,7 @@ export default function LogTripModal({
       clientPhone,
       pickup,
       dropoff,
+      profile: profile || 'profile1',
       date: tripDate,
       time: tripTime,
       status: tripStatus === 'deferred' ? 'deferred' : 'completed',
@@ -374,6 +376,29 @@ export default function LogTripModal({
               />
             </div>
           )}
+
+          {/* Profile Selection (Profile 1 & Profile 2) */}
+          <div className="p-3.5 rounded-xl bg-indigo-500/10 border border-indigo-500/25 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div>
+              <label className="block text-xs font-bold text-indigo-300 flex items-center gap-1.5 mb-0.5">
+                <span>📋</span>
+                <span>Operating Profile *</span>
+              </label>
+              <p className="text-[11px] text-slate-400">
+                Select the profile entity for this service trip
+              </p>
+            </div>
+            <div className="w-full sm:w-44">
+              <select
+                value={profile}
+                onChange={e => setProfile(e.target.value)}
+                className="w-full bg-slate-950 border border-indigo-500/35 rounded-xl px-3 py-2 text-xs text-white font-bold focus:outline-none focus:border-indigo-400 cursor-pointer shadow-sm"
+              >
+                <option value="profile1">Profile 1</option>
+                <option value="profile2">Profile 2</option>
+              </select>
+            </div>
+          </div>
 
           {/* Optional Initial Fuel / Extra Cost */}
           <div className="p-3 rounded-xl bg-white/[0.03] border border-white/10 space-y-2">
