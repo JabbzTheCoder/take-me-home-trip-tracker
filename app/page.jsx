@@ -17,7 +17,7 @@ import ChangePasswordModal from '@/components/modals/ChangePasswordModal';
 import TaxInvoiceModal from '@/components/modals/TaxInvoiceModal';
 import AuthScreen from '@/components/auth/AuthScreen';
 import MandatoryPasswordChange from '@/components/auth/MandatoryPasswordChange';
-import { printTaxInvoice } from '@/lib/invoice';
+import { isTripCancelledOrPaused } from '@/lib/helpers';
 
 export default function Home() {
   // Authentication & User State
@@ -401,16 +401,16 @@ export default function Home() {
       const data = await res.json();
 
       if (data.success && data.trip) {
-        showToast('Trip marked as Deferred (Email alert sent to assigned drivers)');
+        showToast('Trip marked as Cancelled / Paused (Email alert sent to assigned drivers)');
         setTrips(prev => prev.map(t => (t._id || t.id) === tripId ? data.trip : t));
         setSelectedTrip(data.trip);
         return true;
       } else {
-        showToast(data.message || 'Failed to defer trip', 'error');
+        showToast(data.message || 'Failed to update trip status', 'error');
         return false;
       }
     } catch (err) {
-      showToast('Error deferring trip', 'error');
+      showToast('Error updating trip status', 'error');
       return false;
     }
   }, [token, showToast]);
@@ -506,8 +506,8 @@ export default function Home() {
       // 1. Category Filter
       if (filter === 'take_me_home' && trip.type !== 'take_me_home') return false;
       if (filter === 'chauffeur' && trip.type !== 'chauffeur') return false;
-      if (filter === 'completed' && trip.status !== 'completed') return false;
-      if (filter === 'deferred' && trip.status !== 'deferred') return false;
+      if (filter === 'completed' && isTripCancelledOrPaused(trip.status)) return false;
+      if (filter === 'deferred' && !isTripCancelledOrPaused(trip.status)) return false;
 
       // 2. Search Query Filter
       if (searchQuery.trim()) {
@@ -587,8 +587,8 @@ export default function Home() {
         onLogout={handleLogout}
       />
 
-      {/* 2. Key Performance Metrics */}
-      <StatsOverview trips={trips} />
+      {/* 2. Key Performance Metrics (Next Friday Payout & All-Time) */}
+      <StatsOverview trips={trips} currentUser={user} />
 
       {/* 3. Search & Category Filters */}
       <TripFilters

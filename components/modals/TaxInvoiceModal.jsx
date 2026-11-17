@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { getInvoiceData, downloadTaxInvoicePdf, printTaxInvoice } from '@/lib/invoice';
+import { getInvoiceData, downloadTaxInvoicePdf } from '@/lib/invoice';
 
 export default function TaxInvoiceModal({ trip, isOpen, onClose }) {
   if (!isOpen || !trip) return null;
@@ -10,17 +10,6 @@ export default function TaxInvoiceModal({ trip, isOpen, onClose }) {
 
   const handleDownloadPdf = () => {
     downloadTaxInvoicePdf(trip);
-  };
-
-  const handlePrint = () => {
-    printTaxInvoice(trip);
-  };
-
-  const handleOpenStandalone = () => {
-    const tripId = trip._id || trip.id;
-    if (tripId) {
-      window.open(`/invoice/${tripId}`, '_blank');
-    }
   };
 
   return (
@@ -42,35 +31,15 @@ export default function TaxInvoiceModal({ trip, isOpen, onClose }) {
             </div>
           </div>
 
-          <div className="flex items-center flex-wrap gap-2">
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={handleDownloadPdf}
-              className="btn btn-emerald btn-sm flex items-center gap-1.5 shadow-md font-bold"
-              title="Download vector PDF directly to your device"
+              className="btn btn-emerald btn-sm flex items-center gap-1.5 shadow-md font-bold px-3 py-1.5"
+              title="Download official PDF directly to your device"
             >
               <span>📥</span>
               <span>Download PDF</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handlePrint}
-              className="btn btn-gold btn-sm flex items-center gap-1.5 shadow-md font-bold"
-              title="Print official invoice"
-            >
-              <span>🖨️</span>
-              <span>Print</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleOpenStandalone}
-              className="btn btn-secondary btn-sm flex items-center gap-1.5 text-xs hidden sm:inline-flex"
-              title="Open clean standalone page in new tab"
-            >
-              <span>↗️</span>
-              <span>Standalone</span>
             </button>
 
             <button
@@ -210,10 +179,10 @@ export default function TaxInvoiceModal({ trip, isOpen, onClose }) {
           </div>
         </div>
 
-        {/* Modal Bottom Action Footer for Mobile */}
+        {/* Modal Bottom Action Footer for Mobile & Quick Actions */}
         <div className="p-3 sm:p-4 bg-slate-900 border-t border-slate-800 flex items-center justify-between gap-3">
           <p className="text-xs text-slate-400 hidden sm:block">
-            Tip: Use <strong className="text-emerald-400">Download PDF</strong> for saving to files/sharing via WhatsApp or Email.
+            Generates pure vector PDF formatted exactly as official template.
           </p>
           <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
             <button
@@ -222,15 +191,7 @@ export default function TaxInvoiceModal({ trip, isOpen, onClose }) {
               className="btn btn-emerald btn-sm flex-1 sm:flex-initial flex items-center justify-center gap-1.5 font-bold"
             >
               <span>📥</span>
-              <span>Save PDF</span>
-            </button>
-            <button
-              type="button"
-              onClick={handlePrint}
-              className="btn btn-gold btn-sm flex-1 sm:flex-initial flex items-center justify-center gap-1.5 font-bold"
-            >
-              <span>🖨️</span>
-              <span>Print</span>
+              <span>Download PDF</span>
             </button>
             <button
               type="button"

@@ -59,15 +59,22 @@ export async function PUT(req, { params }) {
     if (body.status === 'in_progress') {
       return NextResponse.json({
         success: false,
-        message: 'Invalid status: "in_progress" has been retired. Trips are tracked as Completed or Deferred.'
+        message: 'Invalid status: "in_progress" has been retired. Trips are tracked as Completed or Cancelled / Paused.'
       }, { status: 400 });
     }
+
+    const isCancelledOrPaused =
+      body.status === 'deferred' ||
+      body.status === 'cancelled' ||
+      body.status === 'paused' ||
+      body.status === 'cancelled_paused';
 
     // 3. Compile change summary for email alert
     const changes = [];
     if (body.status && body.status !== existing.status) {
-      const deferNote = body.status === 'deferred' ? ` (Reason: ${body.deferReason || 'Deferred by driver'})` : '';
-      changes.push(`Status changed from "${existing.status}" to "${body.status}"${deferNote}`);
+      const deferNote = isCancelledOrPaused ? ` (Reason: ${body.deferReason || 'Cancelled / Paused by driver'})` : '';
+      const displayStatus = isCancelledOrPaused ? 'Cancelled / Paused' : body.status;
+      changes.push(`Status changed from "${existing.status}" to "${displayStatus}"${deferNote}`);
     }
     if (body.extraCosts !== undefined) {
       changes.push('Trip extra costs (fuel/tolls) updated');
@@ -93,9 +100,9 @@ export async function PUT(req, { params }) {
 
     const changeSummary = changes.join(' • ');
 
-    // 4. If status is changing to deferred, attach deferral metadata
+    // 4. If status is changing to cancelled/paused, attach metadata
     const updatePayload = { ...body };
-    if (body.status === 'deferred') {
+    if (isCancelledOrPaused) {
       updatePayload.deferredAt = new Date().toISOString();
       updatePayload.deferredBy = user.name || 'Assigned Driver';
     }
@@ -118,7 +125,7 @@ export async function PUT(req, { params }) {
 
     return NextResponse.json({
       success: true,
-      message: body.status === 'deferred' ? 'Trip has been deferred.' : 'Trip updated successfully!',
+      message: isCancelledOrPaused ? 'Trip has been marked as Cancelled / Paused.' : 'Trip updated successfully!',
       trip: updated,
       emailNotified: true
     });
@@ -144,7 +151,7 @@ export async function DELETE(req, { params }) {
     // Statutory and business policy compliance: Hard deletion is strictly prohibited
     return NextResponse.json({
       success: false,
-      message: 'Audit Policy: Trips cannot be deleted once created. Please change the status to "Deferred" and provide a reason.'
+      message: 'Audit Policy: Trips cannot be deleted once created. Please change the status to "Cancelled / Paused" and provide a reason.'
     }, { status: 400 });
   } catch (err) {
     console.error('Delete trip error:', err);

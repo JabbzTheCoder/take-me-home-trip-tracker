@@ -37,3 +37,4 @@ server/data/*.log
 .idea
 .vscode/*
 !.vscode/extensions.json
+scratch/

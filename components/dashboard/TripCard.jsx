@@ -12,8 +12,12 @@ function TripCard({
   onToggleStatus
 }) {
   const isTakeMeHome = trip.type === 'take_me_home';
-  const isDone = trip.status === 'completed';
-  const isDeferred = trip.status === 'deferred';
+  const isDeferred =
+    trip.status === 'deferred' ||
+    trip.status === 'cancelled' ||
+    trip.status === 'paused' ||
+    trip.status === 'cancelled_paused';
+  const isDone = !isDeferred;
 
   // Calculate live splits and extra costs
   const splitInfo = calculateTripSplits(trip);
@@ -98,10 +102,10 @@ function TripCard({
         </div>
       </div>
 
-      {/* Deferral reason banner on Card */}
+      {/* Cancellation / Pause reason banner on Card */}
       {isDeferred && trip.deferReason && (
         <div className="px-3 py-1.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-300 text-xs truncate">
-          <span className="font-bold">Reason:</span> {trip.deferReason}
+          <span className="font-bold">Cancelled / Paused:</span> {trip.deferReason}
         </div>
       )}
 
@@ -180,7 +184,7 @@ function TripCard({
               <span>Invoice</span>
             </button>
 
-            {/* If deferred and attached, allow completing trip. Completed trips are locked */}
+            {/* If cancelled/paused and attached, allow completing trip. Completed trips are locked */}
             {isAttached && isDeferred && (
               <button
                 type="button"

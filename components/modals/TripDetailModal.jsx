@@ -45,8 +45,12 @@ export default function TripDetailModal({
   if (!trip) return null;
 
   const isTakeMeHome = trip.type === 'take_me_home';
-  const isDone = trip.status === 'completed';
-  const isDeferred = trip.status === 'deferred';
+  const isDeferred =
+    trip.status === 'deferred' ||
+    trip.status === 'cancelled' ||
+    trip.status === 'paused' ||
+    trip.status === 'cancelled_paused';
+  const isDone = !isDeferred;
 
   // Calculate live financial splits and expense breakdowns
   const splitInfo = calculateTripSplits(trip);
@@ -138,9 +142,10 @@ export default function TripDetailModal({
   };
 
   const deferPresets = [
-    'Client Postponed',
-    'Client Cancelled',
+    'Client Cancelled Booking',
+    'Client Postponed / Paused',
     'Client No-Show / Unreachable',
+    'Weather / Thunderstorm Delay',
     'Vehicle Issue / Maintenance'
   ];
 
@@ -210,13 +215,13 @@ export default function TripDetailModal({
             </div>
           )}
 
-          {/* Deferral Details Notice if trip is Deferred */}
+          {/* Cancellation / Pause Details Notice if trip is Cancelled/Paused */}
           {isDeferred && (
             <div className="p-4 rounded-2xl bg-purple-500/15 border border-purple-500/30 text-purple-200 text-xs space-y-1.5">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-sm text-purple-300 flex items-center gap-1.5">
                   <span>⏸</span>
-                  <span>Trip Deferred</span>
+                  <span>Trip Cancelled / Paused</span>
                 </span>
                 {trip.deferredAt && (
                   <span className="font-mono text-[11px] text-purple-300/80">
@@ -229,7 +234,7 @@ export default function TripDetailModal({
               </p>
               {trip.deferredBy && (
                 <span className="text-[11px] text-purple-300/75 block">
-                  Deferred by: <strong>{trip.deferredBy}</strong>
+                  Logged by: <strong>{trip.deferredBy}</strong>
                 </span>
               )}
             </div>
@@ -826,13 +831,13 @@ export default function TripDetailModal({
             )}
           </div>
 
-          {/* Inline Deferral Prompt (Only accessible if trip is NOT completed) */}
+          {/* Inline Cancellation / Pause Prompt (Only accessible if trip is NOT completed) */}
           {showDeferPrompt && !isDone && (
             <div className="p-5 rounded-2xl bg-slate-950 border border-purple-500/40 space-y-3.5 animate-scale-up">
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-black text-purple-300 flex items-center gap-2">
                   <span>⏸</span>
-                  <span>Defer Trip & Record Reason</span>
+                  <span>Cancel / Pause Trip</span>
                 </h4>
                 <button
                   type="button"
@@ -844,7 +849,7 @@ export default function TripDetailModal({
               </div>
 
               <p className="text-xs text-slate-400 leading-relaxed">
-                As per audit compliance, trips cannot be permanently deleted. Deferring flags this booking with a statutory explanation and automatically notifies the assigned drivers.
+                As per audit compliance, trips cannot be permanently deleted. Cancelling or pausing flags this booking with a clear explanation and automatically notifies the assigned drivers.
               </p>
 
               <div className="flex flex-wrap gap-2">
@@ -863,7 +868,7 @@ export default function TripDetailModal({
               <textarea
                 value={deferReason}
                 onChange={e => setDeferReason(e.target.value)}
-                placeholder="Specific deferral reason or client instructions..."
+                placeholder="Specific cancellation or pause reason..."
                 rows={2}
                 className="w-full bg-slate-900 border border-white/15 rounded-xl p-3 text-base sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-400"
               />
@@ -882,7 +887,7 @@ export default function TripDetailModal({
                   onClick={() => handleConfirmDefer()}
                   className="px-5 py-2 rounded-xl text-xs font-black text-white bg-purple-600 hover:bg-purple-500 disabled:opacity-50 transition-all shadow-md shadow-purple-600/30"
                 >
-                  {deferring ? 'Saving...' : 'Confirm Deferral'}
+                  {deferring ? 'Saving...' : 'Confirm Cancel / Pause'}
                 </button>
               </div>
             </div>
@@ -921,9 +926,9 @@ export default function TripDetailModal({
                   type="button"
                   className="btn px-4 py-3 rounded-xl border border-purple-500/30 bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 font-bold text-xs active:scale-[0.95] transition-all shrink-0 flex items-center gap-1.5"
                   onClick={() => setShowDeferPrompt(prev => !prev)}
-                  title="Defer Trip (Non-deletable compliance)"
+                  title="Cancel or Pause Trip"
                 >
-                  <span>⏸ Defer</span>
+                  <span>⏸ Cancel / Pause</span>
                 </button>
               )}
             </div>

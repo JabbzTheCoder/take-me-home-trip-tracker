@@ -43,18 +43,24 @@ function TripFilters({
     setSearchQuery('');
   };
 
+  const isTripCancelledOrPaused = (status) => {
+    if (!status) return false;
+    const s = String(status).toLowerCase().trim();
+    return s === 'deferred' || s === 'cancelled' || s === 'paused' || s === 'cancelled_paused';
+  };
+
   const total = trips.length;
   const tmhCount = trips.filter(t => t.type === 'take_me_home').length;
   const chauffeurCount = trips.filter(t => t.type === 'chauffeur').length;
-  const completedCount = trips.filter(t => t.status === 'completed').length;
-  const deferredCount = trips.filter(t => t.status === 'deferred').length;
+  const completedCount = trips.filter(t => !isTripCancelledOrPaused(t.status)).length;
+  const cancelledPausedCount = trips.filter(t => isTripCancelledOrPaused(t.status)).length;
 
   const tabs = [
     { id: 'all', label: 'All Trips', count: total },
     { id: 'take_me_home', label: '🚗 Take Me Home', count: tmhCount },
     { id: 'chauffeur', label: '🎩 Chauffeur', count: chauffeurCount },
     { id: 'completed', label: '✓ Completed', count: completedCount },
-    { id: 'deferred', label: '⏸ Deferred', count: deferredCount }
+    { id: 'deferred', label: '⏸ Cancelled / Paused', count: cancelledPausedCount }
   ];
 
   return (

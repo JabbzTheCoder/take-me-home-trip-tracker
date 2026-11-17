@@ -2,11 +2,18 @@
 import React from 'react';
 
 export default function StatusBadge({ status, className = '', showLock = false }) {
-  if (status === 'deferred') {
+  const isCancelledOrPaused =
+    status === 'deferred' ||
+    status === 'cancelled' ||
+    status === 'paused' ||
+    status === 'cancelled_paused' ||
+    status === 'paused_cancelled';
+
+  if (isCancelledOrPaused) {
     return (
       <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30 tracking-wide shadow-sm shadow-purple-500/10 ${className}`}>
         <span className="text-[11px] shrink-0">⏸</span>
-        <span>Deferred</span>
+        <span>Cancelled / Paused</span>
       </span>
     );
   }

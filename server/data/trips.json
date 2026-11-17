@@ -46,7 +46,7 @@
     "chaseCar": "VW Polo (GP 884-POL)",
     "fare": 450,
     "status": "completed",
-    "notes": "Updated by attached driver Jabbz - test note",
+    "notes": "Testing Friday Payout & Cancelled/Paused status notes update",
     "date": "2026-11-16",
     "time": "01:15",
     "createdAt": "2026-11-16T01:15:00.000Z",
