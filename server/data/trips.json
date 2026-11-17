@@ -1,5 +1,38 @@
 [
   {
+    "_id": "trp-1794907591591-465",
+    "type": "take_me_home",
+    "clientName": "Test Deferred Client",
+    "clientPhone": "",
+    "clientCar": "",
+    "pickup": "Sandton City",
+    "dropoff": "Rosebank",
+    "clientDriverName": "Jabbz",
+    "chaseDriverName": "Tebza",
+    "chaseCar": "",
+    "driverName": "",
+    "car": "",
+    "fare": 500,
+    "status": "deferred",
+    "extraCosts": [],
+    "splits": {
+      "splitType": "equal_50_50",
+      "leadDriverAmount": 250,
+      "chaseDriverAmount": 250,
+      "companyAmount": 0,
+      "leadDriverPercent": 50,
+      "chaseDriverPercent": 50
+    },
+    "splitStops": [],
+    "notes": "",
+    "date": "2026-11-17",
+    "time": "11:26",
+    "invoiceNumber": "373",
+    "totalExtraCosts": 0,
+    "netFare": 500,
+    "createdAt": "2026-11-17T09:26:31.591Z"
+  },
+  {
     "_id": "trp-201",
     "type": "take_me_home",
     "invoiceNumber": "371",
@@ -19,7 +52,25 @@
     "createdAt": "2026-11-16T01:15:00.000Z",
     "deferReason": "Client postponed due to thunderstorm",
     "deferredAt": "2026-11-16T20:25:02.958Z",
-    "deferredBy": "Jabbz"
+    "deferredBy": "Jabbz",
+    "extraCosts": [
+      {
+        "id": "test-fuel-1",
+        "category": "fuel",
+        "amount": 150,
+        "description": "BP Garage Petrol Top-up",
+        "paidBy": "Tebza",
+        "createdAt": "2026-11-17T09:26:31.607Z"
+      }
+    ],
+    "totalExtraCosts": 150,
+    "netFare": 300,
+    "splits": {
+      "splitType": "equal_50_50",
+      "leadDriverAmount": 150,
+      "chaseDriverAmount": 150,
+      "companyAmount": 0
+    }
   },
   {
     "_id": "trp-202",

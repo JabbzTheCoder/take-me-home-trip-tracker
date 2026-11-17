@@ -51,6 +51,9 @@ export async function POST(req) {
       car,
       fare,
       status,
+      extraCosts,
+      splits,
+      splitStops,
       notes,
       date,
       time
@@ -76,7 +79,10 @@ export async function POST(req) {
       driverName: driverName || '',
       car: car || '',
       fare: Number(fare) || 0,
-      status: status || 'completed',
+      status: status === 'deferred' ? 'deferred' : 'completed',
+      extraCosts: Array.isArray(extraCosts) ? extraCosts : [],
+      splits: splits || undefined,
+      splitStops: Array.isArray(splitStops) ? splitStops : [],
       notes: notes || '',
       date: date || new Date().toISOString().split('T')[0],
       time: time || new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })

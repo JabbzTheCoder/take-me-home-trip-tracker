@@ -28,6 +28,8 @@ export default function LogTripModal({
   });
   const [tripStatus, setTripStatus] = useState('completed');
   const [fare, setFare] = useState(450);
+  const [initialFuelAmount, setInitialFuelAmount] = useState('');
+  const [initialFuelPaidBy, setInitialFuelPaidBy] = useState('');
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -39,6 +41,18 @@ export default function LogTripModal({
     e.preventDefault();
     setSubmitting(true);
 
+    const extraCosts = [];
+    if (parseFloat(initialFuelAmount) > 0) {
+      extraCosts.push({
+        id: `cost-${Date.now()}`,
+        category: 'fuel',
+        amount: parseFloat(initialFuelAmount),
+        description: 'Fuel / Petrol',
+        paidBy: initialFuelPaidBy || (tripType === 'take_me_home' ? chaseDriver : chauffeurDriver),
+        createdAt: new Date().toISOString()
+      });
+    }
+
     const tripData = {
       type: tripType,
       clientName,
@@ -47,8 +61,9 @@ export default function LogTripModal({
       dropoff,
       date: tripDate,
       time: tripTime,
-      status: tripStatus,
+      status: tripStatus === 'deferred' ? 'deferred' : 'completed',
       fare: parseFloat(fare) || 0,
+      extraCosts,
       notes,
       ...(tripType === 'take_me_home'
         ? {
@@ -337,8 +352,42 @@ export default function LogTripModal({
                 className="w-full bg-slate-950 border border-white/10 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
               >
                 <option value="completed">✓ Completed</option>
-                <option value="in_progress">● In Transit</option>
+                <option value="deferred">⏸ Deferred</option>
               </select>
+            </div>
+          </div>
+
+          {/* Optional Initial Fuel / Extra Cost */}
+          <div className="p-3 rounded-xl bg-white/[0.03] border border-white/10 space-y-2">
+            <span className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+              <span>⛽</span>
+              <span>Extra Trip Costs (Optional - Fuel, Tolls)</span>
+            </span>
+            <div className="grid grid-cols-2 gap-2.5">
+              <div>
+                <label className="block text-[11px] text-slate-400 mb-1">Fuel / Cost Amount (R)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  placeholder="e.g. 150.00"
+                  value={initialFuelAmount}
+                  onChange={e => setInitialFuelAmount(e.target.value)}
+                  className="w-full bg-slate-950 border border-white/10 rounded-lg px-2.5 py-2 text-xs text-white font-mono"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] text-slate-400 mb-1">Paid By</label>
+                <select
+                  value={initialFuelPaidBy}
+                  onChange={e => setInitialFuelPaidBy(e.target.value)}
+                  className="w-full bg-slate-950 border border-white/10 rounded-lg px-2.5 py-2 text-xs text-white"
+                >
+                  <option value="">Default ({tripType === 'take_me_home' ? chaseDriver : chauffeurDriver})</option>
+                  <option value={leadDriver}>Lead ({leadDriver})</option>
+                  <option value={chaseDriver}>Chase ({chaseDriver})</option>
+                  <option value="Company">Company Card</option>
+                </select>
+              </div>
             </div>
           </div>
 

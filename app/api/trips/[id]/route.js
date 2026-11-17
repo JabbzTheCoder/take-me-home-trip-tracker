@@ -47,11 +47,33 @@ export async function PUT(req, { params }) {
       }, { status: 403 });
     }
 
+    // 2.5 Status Change Rule: Once in 'completed' status, the trip status CANNOT be changed
+    if (existing.status === 'completed' && body.status && body.status !== 'completed') {
+      return NextResponse.json({
+        success: false,
+        message: 'Status Change Rule: Once a trip is marked as Completed, its status is finalized and cannot be changed.'
+      }, { status: 400 });
+    }
+
+    // Disallow in_progress status
+    if (body.status === 'in_progress') {
+      return NextResponse.json({
+        success: false,
+        message: 'Invalid status: "in_progress" has been retired. Trips are tracked as Completed or Deferred.'
+      }, { status: 400 });
+    }
+
     // 3. Compile change summary for email alert
     const changes = [];
     if (body.status && body.status !== existing.status) {
       const deferNote = body.status === 'deferred' ? ` (Reason: ${body.deferReason || 'Deferred by driver'})` : '';
       changes.push(`Status changed from "${existing.status}" to "${body.status}"${deferNote}`);
+    }
+    if (body.extraCosts !== undefined) {
+      changes.push('Trip extra costs (fuel/tolls) updated');
+    }
+    if (body.splits !== undefined) {
+      changes.push('Driver fare split configuration updated');
     }
     if (body.notes !== undefined && body.notes !== existing.notes) {
       changes.push(`Trip notes updated: "${body.notes}"`);

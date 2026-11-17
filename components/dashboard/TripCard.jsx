@@ -2,6 +2,7 @@ import React, { memo } from 'react';
 import { formatCurrency } from '../../lib/helpers';
 import StatusBadge from '../ui/StatusBadge';
 import ServiceBadge from '../ui/ServiceBadge';
+import { calculateTripSplits } from '../../lib/splits';
 
 function TripCard({
   trip,
@@ -13,6 +14,9 @@ function TripCard({
   const isTakeMeHome = trip.type === 'take_me_home';
   const isDone = trip.status === 'completed';
   const isDeferred = trip.status === 'deferred';
+
+  // Calculate live splits and extra costs
+  const splitInfo = calculateTripSplits(trip);
 
   // Check if current user is an attached driver
   const currentUserName = (currentUser?.name || '').trim().toLowerCase();
@@ -30,9 +34,7 @@ function TripCard({
       className={`rounded-2xl p-5 flex flex-col gap-3.5 transition-all duration-200 cursor-pointer relative overflow-hidden group select-none border backdrop-blur-xl ${
         isDeferred
           ? 'bg-slate-900/80 border-purple-500/30 hover:border-purple-400/60 shadow-md shadow-purple-500/5'
-          : isDone
-          ? 'bg-slate-900/70 border-white/10 hover:border-emerald-500/40 hover:bg-slate-900/90 shadow-sm'
-          : 'bg-gradient-to-br from-slate-900/90 via-slate-900/80 to-amber-950/20 border-amber-500/30 hover:border-amber-400/60 shadow-lg shadow-amber-500/5'
+          : 'bg-slate-900/70 border-white/10 hover:border-emerald-500/40 hover:bg-slate-900/90 shadow-sm'
       } hover:-translate-y-0.5 active:scale-[0.985]`}
       onClick={() => onSelect(trip)}
     >
@@ -41,7 +43,7 @@ function TripCard({
         <ServiceBadge type={trip.type} />
 
         <div className="flex items-center gap-2">
-          <StatusBadge status={trip.status} />
+          <StatusBadge status={trip.status} showLock={isDone} />
           <span className="font-mono text-xs text-slate-400 font-semibold">
             {trip.time}
           </span>
@@ -71,8 +73,15 @@ function TripCard({
             )}
           </span>
         </div>
-        <div className="text-xl font-black font-mono text-emerald-400 shrink-0">
-          {formatCurrency(trip.fare)}
+        <div className="flex flex-col items-end shrink-0">
+          <div className="text-xl font-black font-mono text-emerald-400">
+            {formatCurrency(trip.fare)}
+          </div>
+          {splitInfo.totalExtraCosts > 0 && (
+            <span className="text-[10px] font-mono text-rose-300 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20">
+              Costs: -{formatCurrency(splitInfo.totalExtraCosts)}
+            </span>
+          )}
         </div>
       </div>
 
@@ -94,6 +103,25 @@ function TripCard({
         <div className="px-3 py-1.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-300 text-xs truncate">
           <span className="font-bold">Reason:</span> {trip.deferReason}
         </div>
+      )}
+
+      {/* Financial Split Pill */}
+      {isTakeMeHome ? (
+        <div className="flex items-center gap-2 text-[11px] bg-white/[0.03] border border-white/5 px-2.5 py-1.5 rounded-xl">
+          <span className="text-amber-400 font-bold shrink-0">👥 Split:</span>
+          <span className="text-slate-300 truncate">
+            {trip.clientDriverName || 'Lead'}: <strong className="text-emerald-300 font-mono">{formatCurrency(splitInfo.leadFinalPayout)}</strong>
+            <span className="text-slate-500 mx-1">|</span>
+            {trip.chaseDriverName || 'Chase'}: <strong className="text-cyan-300 font-mono">{formatCurrency(splitInfo.chaseFinalPayout)}</strong>
+          </span>
+        </div>
+      ) : (
+        splitInfo.totalExtraCosts > 0 && (
+          <div className="flex items-center gap-2 text-[11px] bg-white/[0.03] border border-white/5 px-2.5 py-1.5 rounded-xl">
+            <span className="text-amber-400 font-bold shrink-0">💰 Net Payout:</span>
+            <strong className="text-emerald-300 font-mono">{formatCurrency(splitInfo.netFare)}</strong>
+          </div>
+        )
       )}
 
       {/* 4. Desktop-Enhanced Details: Escort Vehicle, Phone, Notes */}
@@ -152,18 +180,15 @@ function TripCard({
               <span>Invoice</span>
             </button>
 
-            {isAttached && !isDeferred && (
+            {/* If deferred and attached, allow completing trip. Completed trips are locked */}
+            {isAttached && isDeferred && (
               <button
                 type="button"
-                className={`hidden sm:inline-flex px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors ${
-                  isDone
-                    ? 'bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-slate-300'
-                    : 'bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300'
-                }`}
-                onClick={() => onToggleStatus(trip)}
-                title={isDone ? 'Reopen Trip' : 'Mark Completed'}
+                className="hidden sm:inline-flex px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300"
+                onClick={() => onToggleStatus(trip, 'completed')}
+                title="Mark Completed (Finalize)"
               >
-                <span>{isDone ? 'Reopen' : '✓ Done'}</span>
+                <span>✓ Complete</span>
               </button>
             )}
           </div>

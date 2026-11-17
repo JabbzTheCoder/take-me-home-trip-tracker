@@ -266,10 +266,15 @@ export default function Home() {
     setActiveModal('log-trip');
   }, []);
 
-  // Trips: Toggle Status (In Progress <-> Completed <-> Deferred)
+  // Trips: Toggle Status (Complete Deferred Trips; Completed Trips are Locked)
   const handleToggleTripStatus = useCallback(async (trip, explicitStatus) => {
+    if (trip.status === 'completed') {
+      showToast('Status Change Rule: Completed trips are final and locked.', 'error');
+      return;
+    }
+
     const tripId = trip._id || trip.id;
-    const newStatus = explicitStatus || (trip.status === 'completed' ? 'in_progress' : 'completed');
+    const newStatus = explicitStatus || 'completed';
 
     try {
       const res = await fetch(`/api/trips/${tripId}`, {
@@ -283,8 +288,7 @@ export default function Home() {
       const data = await res.json();
 
       if (data.success && data.trip) {
-        const label = newStatus === 'completed' ? 'Completed' : (newStatus === 'deferred' ? 'Deferred' : 'In Transit');
-        showToast(`Trip marked as ${label} (Email alert dispatched)`);
+        showToast('Trip finalized as Completed (Status Locked)');
         setTrips(prev => prev.map(t => (t._id || t.id) === tripId ? data.trip : t));
         setSelectedTrip(data.trip);
       } else {
@@ -292,6 +296,62 @@ export default function Home() {
       }
     } catch (err) {
       showToast('Failed to update trip status', 'error');
+    }
+  }, [token, showToast]);
+
+  // Trips: Save / Record Extra Costs (Fuel, Tolls, Wash, etc.)
+  const handleSaveExtraCosts = useCallback(async (tripId, extraCosts) => {
+    try {
+      const res = await fetch(`/api/trips/${tripId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ extraCosts })
+      });
+      const data = await res.json();
+
+      if (data.success && data.trip) {
+        showToast('Extra costs recorded and driver splits updated!');
+        setTrips(prev => prev.map(t => (t._id || t.id) === tripId ? data.trip : t));
+        setSelectedTrip(data.trip);
+        return true;
+      } else {
+        showToast(data.message || 'Failed to record extra costs', 'error');
+        return false;
+      }
+    } catch {
+      showToast('Error recording extra costs', 'error');
+      return false;
+    }
+  }, [token, showToast]);
+
+  // Trips: Save Driver Fare Splits
+  const handleSaveSplits = useCallback(async (tripId, splits) => {
+    try {
+      const res = await fetch(`/api/trips/${tripId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ splits })
+      });
+      const data = await res.json();
+
+      if (data.success && data.trip) {
+        showToast('Driver fare splits updated!');
+        setTrips(prev => prev.map(t => (t._id || t.id) === tripId ? data.trip : t));
+        setSelectedTrip(data.trip);
+        return true;
+      } else {
+        showToast(data.message || 'Failed to update splits', 'error');
+        return false;
+      }
+    } catch {
+      showToast('Error updating splits', 'error');
+      return false;
     }
   }, [token, showToast]);
 
@@ -446,7 +506,6 @@ export default function Home() {
       // 1. Category Filter
       if (filter === 'take_me_home' && trip.type !== 'take_me_home') return false;
       if (filter === 'chauffeur' && trip.type !== 'chauffeur') return false;
-      if (filter === 'in_progress' && trip.status !== 'in_progress') return false;
       if (filter === 'completed' && trip.status !== 'completed') return false;
       if (filter === 'deferred' && trip.status !== 'deferred') return false;
 
@@ -564,6 +623,8 @@ export default function Home() {
         onToggleStatus={handleToggleTripStatus}
         onDeferTrip={handleDeferTrip}
         onSaveNotes={handleSaveNotes}
+        onSaveExtraCosts={handleSaveExtraCosts}
+        onSaveSplits={handleSaveSplits}
       />
 
       <LogTripModal
