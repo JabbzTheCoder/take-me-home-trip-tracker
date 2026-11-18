@@ -56,24 +56,12 @@ function AppHeader({ user, onOpenModal, onLogout }) {
               Admin
             </span>
           </div>
-          <span className="text-xs text-slate-400 font-medium flex items-center gap-1.5 mt-0.5">
-            <span className="text-emerald-400 font-semibold">Active Dispatch</span> • <span>Tap for Profile</span>
-          </span>
+
         </div>
       </div>
 
       {/* Action Controls: Fleet & System Menu */}
       <div className="flex items-center gap-2 sm:gap-3" ref={menuRef}>
-        <button
-          type="button"
-          className="flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-bold hover:bg-cyan-500/20 hover:scale-[1.02] active:scale-[0.97] transition-all shadow-sm"
-          onClick={() => onOpenModal('cars')}
-          title="Manage Fleet Vehicles"
-        >
-          <span className="text-sm">🚗</span>
-          <span className="hidden xs:inline sm:inline">Fleet</span>
-        </button>
-
         <button
           type="button"
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800/80 hover:bg-rose-500/15 border border-white/10 hover:border-rose-500/30 text-slate-300 hover:text-rose-300 text-xs font-bold transition-all active:scale-95 shadow-sm"

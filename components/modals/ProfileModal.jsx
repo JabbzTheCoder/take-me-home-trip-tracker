@@ -73,7 +73,7 @@ export default function ProfileModal({
         <div className="sticky top-0 z-30 bg-slate-900/98 backdrop-blur-md px-5 py-4 border-b border-white/10 flex items-center justify-between shrink-0">
           <div>
             <h2 className="text-lg font-black text-white">Driver Profile Settings</h2>
-            <small className="text-xs text-amber-400 font-semibold">Chauffeur Credentials & Avatar</small>
+
           </div>
           <button
             type="button"
@@ -166,9 +166,8 @@ export default function ProfileModal({
                 <button
                   key={c}
                   type="button"
-                  className={`w-7 h-7 rounded-full border-2 transition-transform ${
-                    color === c ? 'scale-125 border-white shadow-lg' : 'border-transparent hover:scale-110'
-                  }`}
+                  className={`w-7 h-7 rounded-full border-2 transition-transform ${color === c ? 'scale-125 border-white shadow-lg' : 'border-transparent hover:scale-110'
+                    }`}
                   style={{ background: c }}
                   onClick={() => setColor(c)}
                 />

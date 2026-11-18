@@ -14,7 +14,7 @@ export default function TaxInvoiceModal({ trip, isOpen, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-slate-950/80 backdrop-blur-md animate-fade-in">
-      <div 
+      <div
         className="relative w-full max-w-3xl my-auto bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-scale-up"
         onClick={(e) => e.stopPropagation()}
       >
@@ -63,7 +63,7 @@ export default function TaxInvoiceModal({ trip, isOpen, onClose }) {
         {/* Paper Sheet Preview Area */}
         <div className="flex-1 overflow-y-auto p-3 sm:p-6 bg-slate-950 flex justify-center">
           <div className="w-full max-w-[720px] bg-white text-black p-4 sm:p-8 rounded-lg shadow-xl overflow-x-auto select-text font-sans">
-            
+
             {/* Title Block */}
             <div className="mb-4">
               <h1 className="text-xl sm:text-2xl font-black tracking-wide text-black m-0">TAX INVOICE</h1>
@@ -180,28 +180,6 @@ export default function TaxInvoiceModal({ trip, isOpen, onClose }) {
         </div>
 
         {/* Modal Bottom Action Footer for Mobile & Quick Actions */}
-        <div className="p-3 sm:p-4 bg-slate-900 border-t border-slate-800 flex items-center justify-between gap-3">
-          <p className="text-xs text-slate-400 hidden sm:block">
-            Generates pure vector PDF formatted exactly as official template.
-          </p>
-          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-            <button
-              type="button"
-              onClick={handleDownloadPdf}
-              className="btn btn-emerald btn-sm flex-1 sm:flex-initial flex items-center justify-center gap-1.5 font-bold"
-            >
-              <span>📥</span>
-              <span>Download PDF</span>
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="btn btn-secondary btn-sm"
-            >
-              Close
-            </button>
-          </div>
-        </div>
 
       </div>
     </div>

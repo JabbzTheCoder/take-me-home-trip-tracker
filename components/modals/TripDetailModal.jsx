@@ -59,15 +59,15 @@ export default function TripDetailModal({
   const currentUserName = (currentUser?.name || '').trim().toLowerCase();
   const isAttached = isTakeMeHome
     ? (
-        (trip.clientDriverName && trip.clientDriverName.trim().toLowerCase() === currentUserName) ||
-        (trip.chaseDriverName && trip.chaseDriverName.trim().toLowerCase() === currentUserName)
-      )
+      (trip.clientDriverName && trip.clientDriverName.trim().toLowerCase() === currentUserName) ||
+      (trip.chaseDriverName && trip.chaseDriverName.trim().toLowerCase() === currentUserName)
+    )
     : (
-        trip.driverName && trip.driverName.trim().toLowerCase() === currentUserName
-      );
+      trip.driverName && trip.driverName.trim().toLowerCase() === currentUserName
+    );
 
   const assignedNames = isTakeMeHome
-    ? `${trip.clientDriverName || 'Lead Chauffeur'} & ${trip.chaseDriverName || 'Chase Driver'}`
+    ? `${trip.clientDriverName || 'Client Driver'} & ${trip.chaseDriverName || 'Chase Driver'}`
     : `${trip.driverName || 'Chauffeur'}`;
 
   // Default payer for extra costs
@@ -183,7 +183,7 @@ export default function TripDetailModal({
 
         {/* 2. SCROLLABLE BODY */}
         <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-5 sm:p-7 space-y-5">
-          
+
           {/* Driver Permission Alert Banner */}
           {!isAttached ? (
             <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs flex items-center gap-3">
@@ -242,15 +242,14 @@ export default function TripDetailModal({
 
           {/* Main 2-Column Responsive Layout */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            
+
             {/* Left Column: Hero & Transit Route */}
             <div className="flex flex-col gap-4">
               {/* Hero Banner */}
-              <div className={`p-5 rounded-2xl flex flex-col gap-3 border ${
-                isTakeMeHome
-                  ? 'bg-gradient-to-br from-amber-500/15 via-slate-900 to-slate-900 border-amber-500/30 shadow-lg shadow-amber-500/5'
-                  : 'bg-gradient-to-br from-cyan-500/15 via-slate-900 to-slate-900 border-cyan-500/30 shadow-lg shadow-cyan-500/5'
-              }`}>
+              <div className={`p-5 rounded-2xl flex flex-col gap-3 border ${isTakeMeHome
+                ? 'bg-gradient-to-br from-amber-500/15 via-slate-900 to-slate-900 border-amber-500/30 shadow-lg shadow-amber-500/5'
+                : 'bg-gradient-to-br from-cyan-500/15 via-slate-900 to-slate-900 border-cyan-500/30 shadow-lg shadow-cyan-500/5'
+                }`}>
                 <div className="flex items-center justify-between text-xs font-mono">
                   <div className="flex items-center gap-2">
                     <ServiceBadge type={trip.type} />
@@ -339,7 +338,7 @@ export default function TripDetailModal({
 
             {/* Right Column: Driver Roster, Notes, Fare */}
             <div className="flex flex-col gap-4">
-              
+
               {/* Roster & Assigned Fleet */}
               <div className="p-5 rounded-2xl bg-slate-900/80 border border-white/10 space-y-3">
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
@@ -902,7 +901,7 @@ export default function TripDetailModal({
 
         {/* 3. STICKY BOTTOM ACTIONS */}
         <div className="sticky bottom-0 z-30 bg-slate-900/98 backdrop-blur-md px-5 py-4 border-t border-white/10 flex flex-col sm:flex-row gap-2.5 shrink-0">
-          
+
           {/* Print Official Tax Invoice Button */}
           <button
             type="button"
