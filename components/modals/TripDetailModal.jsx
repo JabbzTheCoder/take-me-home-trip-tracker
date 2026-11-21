@@ -6,6 +6,10 @@ import { formatCurrency } from '../../lib/helpers';
 import StatusBadge from '../ui/StatusBadge';
 import ServiceBadge from '../ui/ServiceBadge';
 import { calculateTripSplits, EXTRA_COST_CATEGORIES } from '../../lib/splits';
+import {
+  getSecondaryDriverDispatchNotification,
+  getTripCompletionNotifications
+} from '../../lib/whatsapp';
 
 export default function TripDetailModal({
   trip,
@@ -27,6 +31,11 @@ export default function TripDetailModal({
   const [deferReason, setDeferReason] = useState('');
   const [deferring, setDeferring] = useState(false);
 
+  // Decline Assignment State
+  const [showDeclinePrompt, setShowDeclinePrompt] = useState(false);
+  const [declineReasonText, setDeclineReasonText] = useState('');
+  const [declining, setDeclining] = useState(false);
+
   // Extra Costs State
   const [showAddCostForm, setShowAddCostForm] = useState(false);
   const [costCategory, setCostCategory] = useState('fuel');
@@ -45,26 +54,28 @@ export default function TripDetailModal({
   if (!trip) return null;
 
   const isTakeMeHome = trip.type === 'take_me_home';
-  const isDeferred =
+  const isCancelledOrPaused =
     trip.status === 'deferred' ||
     trip.status === 'cancelled' ||
     trip.status === 'paused' ||
     trip.status === 'cancelled_paused';
-  const isDone = !isDeferred;
+  const isDeferred = isCancelledOrPaused;
+  const isCompleted = trip.status === 'completed';
+  const isPending = (trip.status || 'pending') === 'pending';
+  const isConfirmed = trip.status === 'confirmed';
+  const isDeclined = trip.status === 'declined';
+  const isDone = isCompleted;
 
   // Calculate live financial splits and expense breakdowns
   const splitInfo = calculateTripSplits(trip);
 
-  // Check if current logged-in driver is attached to this trip
+  // Check if current logged-in driver is assigned to this trip
   const currentUserName = (currentUser?.name || '').trim().toLowerCase();
-  const isAttached = isTakeMeHome
-    ? (
-      (trip.clientDriverName && trip.clientDriverName.trim().toLowerCase() === currentUserName) ||
-      (trip.chaseDriverName && trip.chaseDriverName.trim().toLowerCase() === currentUserName)
-    )
-    : (
-      trip.driverName && trip.driverName.trim().toLowerCase() === currentUserName
-    );
+  const isPrimaryDriver = isTakeMeHome
+    ? (trip.clientDriverName && trip.clientDriverName.trim().toLowerCase() === currentUserName)
+    : (trip.driverName && trip.driverName.trim().toLowerCase() === currentUserName);
+  const isSecondaryDriver = isTakeMeHome && trip.chaseDriverName && trip.chaseDriverName.trim().toLowerCase() === currentUserName;
+  const isAssigned = isPrimaryDriver || isSecondaryDriver;
 
   const assignedNames = isTakeMeHome
     ? `${trip.clientDriverName || 'Client Driver'} & ${trip.chaseDriverName || 'Chase Driver'}`
@@ -86,6 +97,14 @@ export default function TripDetailModal({
     await onDeferTrip(trip, finalReason);
     setDeferring(false);
     setShowDeferPrompt(false);
+  };
+
+  const handleConfirmDecline = async (reasonToSubmit) => {
+    const finalReason = reasonToSubmit || declineReasonText || 'Unavailable / Schedule clash';
+    setDeclining(true);
+    await onToggleStatus(trip, 'declined', finalReason);
+    setDeclining(false);
+    setShowDeclinePrompt(false);
   };
 
   const handleAddExtraCost = async (e) => {
@@ -185,28 +204,49 @@ export default function TripDetailModal({
         <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-5 sm:p-7 space-y-5">
 
           {/* Driver Permission Alert Banner */}
-          {!isAttached ? (
+          {!isAssigned ? (
             <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs flex items-center gap-3">
               <span className="text-xl shrink-0">👁️</span>
               <div className="leading-relaxed">
                 <strong className="text-white block font-bold">Read-Only View:</strong>
-                You are not an assigned driver on this trip ({assignedNames}). Other drivers can view trip details, but only attached drivers can edit notes, record extra costs, or manage splits.
+                You are not an assigned driver on this trip ({assignedNames}). Other drivers can view trip details, but only assigned drivers can edit notes, record extra costs, or manage splits.
               </div>
             </div>
           ) : (
             <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 text-xs flex items-center justify-between">
               <span className="flex items-center gap-2 font-semibold">
                 <span>✓</span>
-                <span>Attached driver: Authorized to record costs, view splits, and add trip instructions.</span>
+                <span>Assigned driver: Authorized to record costs, view splits, and add trip instructions.</span>
               </span>
               <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300">
-                Attached Driver
+                Assigned Driver
               </span>
             </div>
           )}
 
+          {/* Pending Status Notice */}
+          {isPending && (
+            <div className="p-3.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-xs flex items-center justify-between text-amber-200">
+              <span className="flex items-center gap-2 font-semibold">
+                <span className="animate-spin">⏳</span>
+                <span>Status Pending: Awaiting secondary driver ({trip.chaseDriverName || 'Co-Driver'}) acceptance.</span>
+              </span>
+            </div>
+          )}
+
+          {/* Declined Status Notice */}
+          {isDeclined && (
+            <div className="p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-xs space-y-1 text-rose-200">
+              <div className="font-bold flex items-center gap-1.5 text-white">
+                <span>✕</span>
+                <span>Trip Assignment Declined by {trip.declinedBy || trip.chaseDriverName || 'Secondary Driver'}</span>
+              </div>
+              <p className="italic text-rose-300">Reason: "{trip.declineReason || 'Unavailable'}"</p>
+            </div>
+          )}
+
           {/* Status Lock Indicator if Completed */}
-          {isDone && (
+          {isCompleted && (
             <div className="p-3 rounded-xl bg-slate-800/80 border border-emerald-500/30 text-xs flex items-center gap-2.5 text-slate-300">
               <span className="text-base">🔒</span>
               <div className="leading-tight">
@@ -388,7 +428,7 @@ export default function TripDetailModal({
                   <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                     📝 TRIP NOTES & INSTRUCTIONS
                   </span>
-                  {isAttached && !isEditingNotes && (
+                  {isAssigned && !isCompleted && !isEditingNotes && (
                     <button
                       type="button"
                       className="text-xs font-bold text-amber-400 hover:text-amber-300 hover:underline"
@@ -468,7 +508,7 @@ export default function TripDetailModal({
                 </p>
               </div>
 
-              {isAttached && !showAddCostForm && (
+              {isAssigned && !isCompleted && !showAddCostForm && (
                 <button
                   type="button"
                   onClick={() => setShowAddCostForm(true)}
@@ -609,7 +649,7 @@ export default function TripDetailModal({
                         <span className="text-sm font-mono font-bold text-rose-400">
                           -{formatCurrency(cost.amount)}
                         </span>
-                        {isAttached && (
+                        {isAssigned && !isCompleted && (
                           <button
                             type="button"
                             onClick={() => handleDeleteExtraCost(cost.id)}
@@ -653,7 +693,7 @@ export default function TripDetailModal({
                 </p>
               </div>
 
-              {isTakeMeHome && isAttached && !isEditingSplit && (
+              {isTakeMeHome && isAssigned && !isCompleted && !isEditingSplit && (
                 <button
                   type="button"
                   onClick={() => setIsEditingSplit(true)}
@@ -897,6 +937,74 @@ export default function TripDetailModal({
             </div>
           )}
 
+          {/* Inline Decline Prompt (Secondary Driver) */}
+          {showDeclinePrompt && isPending && (
+            <div className="p-5 rounded-2xl bg-slate-950 border border-rose-500/40 space-y-3.5 animate-scale-up">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-black text-rose-300 flex items-center gap-2">
+                  <span>✕</span>
+                  <span>Decline Trip Assignment</span>
+                </h4>
+                <button
+                  type="button"
+                  onClick={() => setShowDeclinePrompt(false)}
+                  className="text-slate-400 hover:text-white text-xs"
+                >
+                  ✕ Close
+                </button>
+              </div>
+
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Please provide a reason for declining so the primary driver can re-assign another driver.
+              </p>
+
+              <div className="flex flex-wrap gap-2">
+                {[
+                  'Off-duty / Resting',
+                  'Vehicle mechanical issue',
+                  'Prior booking / Schedule clash',
+                  'Too far from pickup',
+                  'Family emergency'
+                ].map(preset => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => setDeclineReasonText(preset)}
+                    className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-white/5 border border-white/10 hover:border-rose-400 hover:bg-rose-500/20 text-slate-300 hover:text-rose-200 transition-colors"
+                  >
+                    {preset}
+                  </button>
+                ))}
+              </div>
+
+              <textarea
+                value={declineReasonText}
+                onChange={e => setDeclineReasonText(e.target.value)}
+                placeholder="Specific decline reason..."
+                rows={2}
+                className="w-full bg-slate-900 border border-white/15 rounded-xl p-3 text-base sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-rose-400"
+              />
+
+              <div className="flex justify-end gap-2.5 pt-1">
+                <button
+                  type="button"
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-300 bg-white/10 hover:bg-white/20"
+                  onClick={() => setShowDeclinePrompt(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={declining || !declineReasonText.trim()}
+                  onClick={() => handleConfirmDecline()}
+                  className="px-5 py-2 rounded-xl text-xs font-black text-white bg-rose-600 hover:bg-rose-500 disabled:opacity-50 transition-all shadow-md shadow-rose-600/30"
+                >
+                  {declining ? 'Declining...' : 'Confirm Decline'}
+                </button>
+              </div>
+            </div>
+          )}
+
         </div>
 
         {/* 3. STICKY BOTTOM ACTIONS */}
@@ -912,30 +1020,85 @@ export default function TripDetailModal({
             <span>Tax Invoice / PDF</span>
           </button>
 
-          {/* Attached Driver Actions: Only if deferred can they complete. Completed trips are locked */}
-          {isAttached && (
-            <div className="flex items-center gap-2">
-              {isDeferred && (
-                <button
-                  type="button"
-                  className="btn btn-emerald flex-1 sm:flex-none py-3 px-5 rounded-xl font-bold text-xs active:scale-[0.97] transition-all shrink-0"
-                  onClick={() => onToggleStatus(trip, 'completed')}
-                >
-                  <span>✓ Mark Completed</span>
-                </button>
+          {/* Pending Status Actions */}
+          {isPending && (
+            <div className="flex items-center gap-2 flex-wrap">
+              {isSecondaryDriver && (
+                <>
+                  <button
+                    type="button"
+                    className="btn btn-emerald py-3 px-4 rounded-xl font-black text-xs active:scale-95 transition-all shadow-md shadow-emerald-500/20"
+                    onClick={() => onToggleStatus(trip, 'confirmed')}
+                    title="Accept Assignment"
+                  >
+                    <span>✓ Accept</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="btn py-3 px-4 rounded-xl border border-rose-500/30 bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 font-bold text-xs active:scale-95 transition-all"
+                    onClick={() => setShowDeclinePrompt(true)}
+                    title="Decline Assignment"
+                  >
+                    <span>✕ Decline</span>
+                  </button>
+                </>
               )}
+              <button
+                type="button"
+                className="py-3 px-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 font-bold text-xs flex items-center gap-1.5 transition-all active:scale-95"
+                onClick={() => {
+                  const notif = getSecondaryDriverDispatchNotification(trip);
+                  window.open(notif.url, '_blank');
+                }}
+                title="Send WhatsApp Dispatch to Secondary Driver"
+              >
+                <span>💬</span>
+                <span>WhatsApp {trip.chaseDriverName || 'Co-Driver'}</span>
+              </button>
+            </div>
+          )}
 
-              {!isDone && !isDeferred && (
+          {/* Confirmed / Deferred Actions: Only assigned drivers can complete or cancel/pause */}
+          {isAssigned && (isConfirmed || isDeferred) && (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className="btn btn-emerald flex-1 sm:flex-none py-3 px-5 rounded-xl font-black text-xs active:scale-[0.97] transition-all shrink-0 shadow-lg shadow-emerald-500/20"
+                onClick={() => onToggleStatus(trip, 'completed')}
+                title="Mark Completed and Permanently Lock Trip"
+              >
+                <span>✓ Complete & Lock</span>
+              </button>
+
+              {isConfirmed && (
                 <button
                   type="button"
                   className="btn px-4 py-3 rounded-xl border border-purple-500/30 bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 font-bold text-xs active:scale-[0.95] transition-all shrink-0 flex items-center gap-1.5"
                   onClick={() => setShowDeferPrompt(prev => !prev)}
-                  title="Cancel or Pause Trip"
+                  title="Client Cancelled or Paused"
                 >
                   <span>⏸ Cancel / Pause</span>
                 </button>
               )}
             </div>
+          )}
+
+          {/* Completed State: Share Completion Splits on WhatsApp */}
+          {isCompleted && (
+            <button
+              type="button"
+              className="py-3 px-4 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95"
+              onClick={() => {
+                const notifs = getTripCompletionNotifications(trip, currentUser?.name);
+                const isUserLead = (trip.clientDriverName || '').toLowerCase() === currentUserName;
+                const target = isUserLead ? notifs.chaseNotification : notifs.leadNotification;
+                window.open(target.url, '_blank');
+              }}
+              title="Share Split Summary on WhatsApp"
+            >
+              <span>💬</span>
+              <span>WhatsApp Splits</span>
+            </button>
           )}
         </div>
 

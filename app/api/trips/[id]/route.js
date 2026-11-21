@@ -2,6 +2,56 @@ import { NextResponse } from 'next/server';
 import { dbService } from '@/lib/db';
 import { getUserFromRequest } from '@/lib/auth';
 import { sendTripChangeNotification } from '@/lib/email';
+import {
+  getTripAcceptedNotification,
+  getTripDeclinedNotification,
+  getTripCompletionNotifications,
+  getTripChangeNotification
+} from '@/lib/whatsapp';
+
+export async function GET(req, { params }) {
+  try {
+    const { id } = await params;
+    const trip = await dbService.getTripById(id);
+    if (!trip) {
+      return NextResponse.json({
+        success: false,
+        message: 'Trip record not found'
+      }, { status: 404 });
+    }
+
+    const user = getUserFromRequest(req);
+    let isAssigned = false;
+    let isPrimaryDriver = false;
+    let isSecondaryDriver = false;
+
+    if (user) {
+      const userName = (user.name || '').trim().toLowerCase();
+      const isTakeMeHome = trip.type === 'take_me_home';
+      isPrimaryDriver = isTakeMeHome
+        ? (trip.clientDriverName && trip.clientDriverName.trim().toLowerCase() === userName)
+        : (trip.driverName && trip.driverName.trim().toLowerCase() === userName);
+      isSecondaryDriver = isTakeMeHome && trip.chaseDriverName && trip.chaseDriverName.trim().toLowerCase() === userName;
+      isAssigned = isPrimaryDriver || isSecondaryDriver;
+    }
+
+    return NextResponse.json({
+      success: true,
+      trip,
+      authenticated: !!user,
+      currentUser: user ? { id: user.id || user._id, name: user.name, role: user.role } : null,
+      isAssigned,
+      isPrimaryDriver,
+      isSecondaryDriver
+    });
+  } catch (err) {
+    console.error('Get trip error:', err);
+    return NextResponse.json({
+      success: false,
+      message: 'Failed to retrieve trip'
+    }, { status: 500 });
+  }
+}
 
 export async function PUT(req, { params }) {
   try {
@@ -16,7 +66,7 @@ export async function PUT(req, { params }) {
     const { id } = await params;
     const body = await req.json();
 
-    // 1. Fetch current trip to check driver assignment
+    // 1. Fetch current trip to check driver assignment and lock status
     const existing = await dbService.getTripById(id);
     if (!existing) {
       return NextResponse.json({
@@ -25,33 +75,31 @@ export async function PUT(req, { params }) {
       }, { status: 404 });
     }
 
-    // 2. Strict Driver Authorization: Only attached drivers can edit
+    // 2. Strict Driver Authorization: Only assigned drivers can edit / act on trip
     const userName = (user.name || '').trim().toLowerCase();
-    const isAttached = existing.type === 'take_me_home'
-      ? (
-          (existing.clientDriverName && existing.clientDriverName.trim().toLowerCase() === userName) ||
-          (existing.chaseDriverName && existing.chaseDriverName.trim().toLowerCase() === userName)
-        )
-      : (
-          existing.driverName && existing.driverName.trim().toLowerCase() === userName
-        );
+    const isTakeMeHome = existing.type === 'take_me_home';
+    const isPrimaryDriver = isTakeMeHome
+      ? (existing.clientDriverName && existing.clientDriverName.trim().toLowerCase() === userName)
+      : (existing.driverName && existing.driverName.trim().toLowerCase() === userName);
+    const isSecondaryDriver = isTakeMeHome && existing.chaseDriverName && existing.chaseDriverName.trim().toLowerCase() === userName;
+    const isAssigned = isPrimaryDriver || isSecondaryDriver;
 
-    if (!isAttached) {
-      const assignedNames = existing.type === 'take_me_home'
-        ? `${existing.clientDriverName || 'Driver 1'} & ${existing.chaseDriverName || 'Driver 2'}`
+    if (!isAssigned) {
+      const assignedNames = isTakeMeHome
+        ? `${existing.clientDriverName || 'Lead'} & ${existing.chaseDriverName || 'Chase'}`
         : `${existing.driverName || 'Driver'}`;
 
       return NextResponse.json({
         success: false,
-        message: `Permission denied: Trips are editable only by assigned drivers (${assignedNames}). Other drivers may view but cannot modify.`
+        message: `Permission denied: Trips are actionable only by assigned drivers (${assignedNames}). Other drivers may view but cannot modify.`
       }, { status: 403 });
     }
 
-    // 2.5 Status Change Rule: Once in 'completed' status, the trip status CANNOT be changed
-    if (existing.status === 'completed' && body.status && body.status !== 'completed') {
+    // 3. Status Lock Rule: Once a trip is marked as Completed, it is permanently locked
+    if (existing.status === 'completed') {
       return NextResponse.json({
         success: false,
-        message: 'Status Change Rule: Once a trip is marked as Completed, its status is finalized and cannot be changed.'
+        message: 'Trip is completed and locked. Once finalized as Completed, trip details, splits, costs, and status cannot be modified.'
       }, { status: 400 });
     }
 
@@ -59,54 +107,116 @@ export async function PUT(req, { params }) {
     if (body.status === 'in_progress') {
       return NextResponse.json({
         success: false,
-        message: 'Invalid status: "in_progress" has been retired. Trips are tracked as Completed or Cancelled / Paused.'
+        message: 'Invalid status: "in_progress" has been retired.'
       }, { status: 400 });
     }
 
-    const isCancelledOrPaused =
-      body.status === 'deferred' ||
-      body.status === 'cancelled' ||
-      body.status === 'paused' ||
-      body.status === 'cancelled_paused';
-
-    // 3. Compile change summary for email alert
-    const changes = [];
-    if (body.status && body.status !== existing.status) {
-      const deferNote = isCancelledOrPaused ? ` (Reason: ${body.deferReason || 'Cancelled / Paused by driver'})` : '';
-      const displayStatus = isCancelledOrPaused ? 'Cancelled / Paused' : body.status;
-      changes.push(`Status changed from "${existing.status}" to "${displayStatus}"${deferNote}`);
-    }
-    if (body.extraCosts !== undefined) {
-      changes.push('Trip extra costs (fuel/tolls) updated');
-    }
-    if (body.splits !== undefined) {
-      changes.push('Driver fare split configuration updated');
-    }
-    if (body.notes !== undefined && body.notes !== existing.notes) {
-      changes.push(`Trip notes updated: "${body.notes}"`);
-    }
-    if (body.fare !== undefined && Number(body.fare) !== Number(existing.fare)) {
-      changes.push(`Fare rate updated to R${body.fare}`);
-    }
-    if (body.pickup && body.pickup !== existing.pickup) {
-      changes.push(`Pickup address modified: "${body.pickup}"`);
-    }
-    if (body.dropoff && body.dropoff !== existing.dropoff) {
-      changes.push(`Dropoff address modified: "${body.dropoff}"`);
-    }
-    if (changes.length === 0) {
-      changes.push('Trip itinerary or passenger details modified');
-    }
-
-    const changeSummary = changes.join(' • ');
-
-    // 4. If status is changing to cancelled/paused, attach metadata
+    const allUsers = await dbService.getAllBrothers();
+    const action = body.action || '';
     const updatePayload = { ...body };
-    if (isCancelledOrPaused) {
-      updatePayload.deferredAt = new Date().toISOString();
-      updatePayload.deferredBy = user.name || 'Assigned Driver';
+    delete updatePayload.action;
+
+    let responseMessage = 'Trip updated successfully!';
+    let whatsappPayload = null;
+
+    // 4. ACTION DISPATCH: Accept, Decline, Complete, or Cancel/Pause
+    if (action === 'accept' || body.status === 'confirmed') {
+      // 2.4 Secondary Driver accepts trip -> status moves to 'confirmed'
+      updatePayload.status = 'confirmed';
+      updatePayload.confirmedAt = new Date().toISOString();
+      updatePayload.confirmedBy = user.name || 'Assigned Driver';
+
+      // 2.5 Generate WhatsApp message for Primary Driver
+      const updatedMock = { ...existing.toObject ? existing.toObject() : existing, ...updatePayload };
+      whatsappPayload = {
+        type: 'accepted',
+        ...getTripAcceptedNotification(updatedMock, user.name, undefined, allUsers)
+      };
+      responseMessage = 'Trip assignment accepted! Status is now Confirmed.';
+
+    } else if (action === 'decline' || body.status === 'declined') {
+      // 2.4 Secondary Driver declines trip with reason -> status moves to 'declined'
+      const reason = (body.declineReason || '').trim();
+      if (!reason) {
+        return NextResponse.json({
+          success: false,
+          message: 'A reason is required when declining a trip assignment.'
+        }, { status: 400 });
+      }
+
+      updatePayload.status = 'declined';
+      updatePayload.declinedAt = new Date().toISOString();
+      updatePayload.declinedBy = user.name || 'Assigned Driver';
+      updatePayload.declineReason = reason;
+
+      // 2.5 Generate WhatsApp message for Primary Driver
+      const updatedMock = { ...existing.toObject ? existing.toObject() : existing, ...updatePayload };
+      whatsappPayload = {
+        type: 'declined',
+        ...getTripDeclinedNotification(updatedMock, user.name, reason, undefined, allUsers)
+      };
+      responseMessage = 'Trip assignment declined. Primary driver will be notified.';
+
+    } else if (action === 'complete' || body.status === 'completed') {
+      // 2.6 Assigned driver completes trip -> moves to 'completed', permanently locked
+      updatePayload.status = 'completed';
+      updatePayload.completedAt = new Date().toISOString();
+      updatePayload.completedBy = user.name || 'Assigned Driver';
+
+      const updatedMock = { ...existing.toObject ? existing.toObject() : existing, ...updatePayload };
+      whatsappPayload = {
+        type: 'completed',
+        ...getTripCompletionNotifications(updatedMock, user.name, undefined, allUsers)
+      };
+      responseMessage = 'Trip marked as Completed and locked! Completion summary sent to assigned drivers.';
+
+    } else {
+      const isCancelledOrPaused =
+        body.status === 'deferred' ||
+        body.status === 'cancelled' ||
+        body.status === 'paused' ||
+        body.status === 'cancelled_paused';
+
+      if (isCancelledOrPaused) {
+        updatePayload.deferredAt = new Date().toISOString();
+        updatePayload.deferredBy = user.name || 'Assigned Driver';
+        if (body.deferReason) updatePayload.deferReason = body.deferReason;
+
+        const updatedMock = { ...existing.toObject ? existing.toObject() : existing, ...updatePayload };
+        const changeAlerts = getTripChangeNotification(
+          updatedMock,
+          user.name,
+          `Status changed to Cancelled / Paused (Reason: ${body.deferReason || 'Client request'})`,
+          undefined,
+          allUsers
+        );
+        whatsappPayload = {
+          type: 'cancelled_paused',
+          alerts: changeAlerts
+        };
+        responseMessage = 'Trip has been marked as Cancelled / Paused.';
+      } else {
+        // Details change between confirmed and completed
+        const changes = [];
+        if (body.extraCosts !== undefined) changes.push('Extra costs recorded');
+        if (body.splits !== undefined) changes.push('Driver splits updated');
+        if (body.notes !== undefined && body.notes !== existing.notes) changes.push('Trip notes updated');
+        if (body.fare !== undefined && Number(body.fare) !== Number(existing.fare)) changes.push(`Fare set to R${body.fare}`);
+        if (body.pickup && body.pickup !== existing.pickup) changes.push(`Pickup changed to ${body.pickup}`);
+        if (body.dropoff && body.dropoff !== existing.dropoff) changes.push(`Dropoff changed to ${body.dropoff}`);
+        if (changes.length === 0) changes.push('Trip details modified');
+
+        const changeSummary = changes.join(' • ');
+        const updatedMock = { ...existing.toObject ? existing.toObject() : existing, ...updatePayload };
+        const changeAlerts = getTripChangeNotification(updatedMock, user.name, changeSummary, undefined, allUsers);
+        whatsappPayload = {
+          type: 'details_updated',
+          alerts: changeAlerts
+        };
+      }
     }
 
+    // 5. Update Database Record
     const updated = await dbService.updateTrip(id, updatePayload);
     if (!updated) {
       return NextResponse.json({
@@ -115,18 +225,23 @@ export async function PUT(req, { params }) {
       }, { status: 500 });
     }
 
-    // 5. Asynchronously notify assigned drivers via email
+    // 6. Asynchronously send email notification to assigned drivers
+    const changesSummaryText = body.status && body.status !== existing.status
+      ? `Status changed from "${existing.status}" to "${body.status}"`
+      : 'Trip record updated';
+
     sendTripChangeNotification({
       trip: updated,
       previousTrip: existing,
       updatedBy: user,
-      changeSummary
+      changeSummary: changesSummaryText
     }).catch(err => console.error('Background email dispatch error:', err));
 
     return NextResponse.json({
       success: true,
-      message: isCancelledOrPaused ? 'Trip has been marked as Cancelled / Paused.' : 'Trip updated successfully!',
+      message: responseMessage,
       trip: updated,
+      whatsappPayload,
       emailNotified: true
     });
   } catch (err) {

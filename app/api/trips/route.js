@@ -68,6 +68,10 @@ export async function POST(req) {
       }, { status: 400 });
     }
 
+    const initialStatus = (status === 'deferred' || status === 'cancelled' || status === 'paused' || status === 'cancelled_paused')
+      ? status
+      : (status || 'pending');
+
     const newTrip = await dbService.createTrip({
       type,
       clientName,
@@ -82,7 +86,8 @@ export async function POST(req) {
       driverName: driverName || '',
       car: car || '',
       fare: Number(fare) || 0,
-      status: (status === 'deferred' || status === 'cancelled' || status === 'paused' || status === 'cancelled_paused') ? status : 'completed',
+      status: initialStatus,
+      createdByDriver: user.name || clientDriverName || driverName || '',
       deferReason: deferReason || '',
       extraCosts: Array.isArray(extraCosts) ? extraCosts : [],
       splits: splits || undefined,
@@ -92,10 +97,15 @@ export async function POST(req) {
       time: time || new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
     });
 
+    const allUsers = await dbService.getAllBrothers();
+    const { getSecondaryDriverDispatchNotification } = await import('@/lib/whatsapp');
+    const whatsappDispatch = getSecondaryDriverDispatchNotification(newTrip, undefined, allUsers);
+
     return NextResponse.json({
       success: true,
-      message: 'Trip logged successfully!',
-      trip: newTrip
+      message: 'Trip logged successfully (Status: Pending Review)!',
+      trip: newTrip,
+      whatsappDispatch
     }, { status: 201 });
   } catch (err) {
     console.error('Create trip error:', err);

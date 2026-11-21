@@ -22,9 +22,9 @@ function TripCard({
   // Calculate live splits and extra costs
   const splitInfo = calculateTripSplits(trip);
 
-  // Check if current user is an attached driver
+  // Check if current user is an assigned driver
   const currentUserName = (currentUser?.name || '').trim().toLowerCase();
-  const isAttached = isTakeMeHome
+  const isAssigned = isTakeMeHome
     ? (
         (trip.clientDriverName && trip.clientDriverName.trim().toLowerCase() === currentUserName) ||
         (trip.chaseDriverName && trip.chaseDriverName.trim().toLowerCase() === currentUserName)
@@ -169,7 +169,7 @@ function TripCard({
               ? `${trip.clientDriverName || 'Lead'} & ${trip.chaseDriverName || 'Chase'}`
               : `${trip.driverName || 'Driver'}`}
           </span>
-          {!isAttached && (
+          {!isAssigned && (
             <span className="text-[10px] text-slate-500 bg-white/5 px-1.5 py-0.5 rounded border border-white/5 shrink-0">
               view-only
             </span>
@@ -189,13 +189,13 @@ function TripCard({
               <span>Invoice</span>
             </button>
 
-            {/* If cancelled/paused and attached, allow completing trip. Completed trips are locked */}
-            {isAttached && isDeferred && (
+            {/* If assigned driver and trip is confirmed (or cancelled/paused), allow completing trip. Completed trips are locked */}
+            {isAssigned && (trip.status === 'confirmed' || isDeferred) && (
               <button
                 type="button"
                 className="hidden sm:inline-flex px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300"
                 onClick={() => onToggleStatus(trip, 'completed')}
-                title="Mark Completed (Finalize)"
+                title="Mark Completed (Finalize & Lock)"
               >
                 <span>✓ Complete</span>
               </button>

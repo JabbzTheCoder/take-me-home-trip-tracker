@@ -26,7 +26,7 @@ export default function LogTripModal({
     const d = new Date();
     return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   });
-  const [tripStatus, setTripStatus] = useState('completed');
+  const [tripStatus, setTripStatus] = useState('pending');
   const [cancelPauseReason, setCancelPauseReason] = useState('');
   const [profile, setProfile] = useState('profile1');
   const [fare, setFare] = useState(450);
@@ -64,7 +64,7 @@ export default function LogTripModal({
       profile: profile || 'profile1',
       date: tripDate,
       time: tripTime,
-      status: tripStatus === 'deferred' ? 'deferred' : 'completed',
+      status: tripStatus === 'deferred' ? 'deferred' : 'pending',
       deferReason: tripStatus === 'deferred' ? (cancelPauseReason || 'Cancelled / Paused upon creation') : '',
       fare: parseFloat(fare) || 0,
       extraCosts,
@@ -446,6 +446,17 @@ export default function LogTripModal({
             />
           </div>
 
+          {/* Secondary Driver WhatsApp Dispatch Notice */}
+          <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-xs text-amber-200 flex items-center gap-2.5">
+            <span className="text-base shrink-0 animate-pulse">⏳</span>
+            <div className="leading-tight">
+              <strong>Initial Status: Pending Review</strong>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Assigned secondary driver (<strong>{tripType === 'take_me_home' ? chaseDriver : chauffeurDriver}</strong>) will be dispatched via WhatsApp with a link to accept or decline.
+              </p>
+            </div>
+          </div>
+
           {/* Sticky Actions Bar */}
           <div className="sticky bottom-0 z-20 bg-slate-900/98 backdrop-blur-md pt-3 pb-1 border-t border-white/10 flex gap-2.5 mt-2">
             <button
@@ -460,7 +471,7 @@ export default function LogTripModal({
               disabled={submitting}
               className="btn btn-gold btn-glow flex-1 py-3 rounded-xl text-xs font-black"
             >
-              {submitting ? 'Logging Trip...' : 'Confirm & Log Trip'}
+              {submitting ? 'Logging Trip...' : 'Log Trip (Status: Pending) ›'}
             </button>
           </div>
         </form>

@@ -50,17 +50,21 @@ function TripFilters({
   };
 
   const total = trips.length;
+  const pendingCount = trips.filter(t => (t.status || 'pending') === 'pending').length;
+  const confirmedCount = trips.filter(t => t.status === 'confirmed').length;
+  const completedCount = trips.filter(t => t.status === 'completed').length;
+  const cancelledPausedCount = trips.filter(t => isTripCancelledOrPaused(t.status) || t.status === 'declined').length;
   const tmhCount = trips.filter(t => t.type === 'take_me_home').length;
   const chauffeurCount = trips.filter(t => t.type === 'chauffeur').length;
-  const completedCount = trips.filter(t => !isTripCancelledOrPaused(t.status)).length;
-  const cancelledPausedCount = trips.filter(t => isTripCancelledOrPaused(t.status)).length;
 
   const tabs = [
     { id: 'all', label: 'All Trips', count: total },
-    { id: 'take_me_home', label: '🚗 Take Me Home', count: tmhCount },
-    { id: 'chauffeur', label: '🎩 Chauffeur', count: chauffeurCount },
+    { id: 'pending', label: '⏳ Pending', count: pendingCount },
+    { id: 'confirmed', label: '🤝 Confirmed', count: confirmedCount },
     { id: 'completed', label: '✓ Completed', count: completedCount },
-    { id: 'deferred', label: '⏸ Cancelled / Paused', count: cancelledPausedCount }
+    { id: 'deferred', label: '⏸ Cancelled / Paused', count: cancelledPausedCount },
+    { id: 'take_me_home', label: '🚗 Take Me Home', count: tmhCount },
+    { id: 'chauffeur', label: '🎩 Chauffeur', count: chauffeurCount }
   ];
 
   return (

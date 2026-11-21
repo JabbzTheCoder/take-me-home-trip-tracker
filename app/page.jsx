@@ -36,6 +36,7 @@ export default function Home() {
   // activeModal: null | 'trip-detail' | 'log-trip' | 'fleet' | 'profile' | 'change-password' | 'popia'
   const [activeModal, setActiveModal] = useState(null);
   const [selectedTrip, setSelectedTrip] = useState(null);
+  const [whatsAppPromptModal, setWhatsAppPromptModal] = useState(null);
   const [toasts, setToasts] = useState([]);
 
   // Toast Notification Dispatcher (Centered at top of screen)
@@ -267,7 +268,8 @@ export default function Home() {
   }, []);
 
   // Trips: Toggle Status (Complete Deferred Trips; Completed Trips are Locked)
-  const handleToggleTripStatus = useCallback(async (trip, explicitStatus) => {
+  // Trips: Toggle Status (Pending -> Confirmed / Declined / Completed)
+  const handleToggleTripStatus = useCallback(async (trip, explicitStatus, explicitReason = '') => {
     if (trip.status === 'completed') {
       showToast('Status Change Rule: Completed trips are final and locked.', 'error');
       return;
@@ -277,27 +279,61 @@ export default function Home() {
     const newStatus = explicitStatus || 'completed';
 
     try {
+      const payload = { status: newStatus };
+      if (newStatus === 'confirmed') payload.action = 'accept';
+      if (newStatus === 'declined') {
+        payload.action = 'decline';
+        payload.declineReason = explicitReason || 'Unavailable / Schedule clash';
+      }
+      if (newStatus === 'completed') payload.action = 'complete';
+
       const res = await fetch(`/api/trips/${tripId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ status: newStatus })
+        body: JSON.stringify(payload)
       });
       const data = await res.json();
 
       if (data.success && data.trip) {
-        showToast('Trip finalized as Completed (Status Locked)');
+        showToast(data.message || 'Trip status updated!');
         setTrips(prev => prev.map(t => (t._id || t.id) === tripId ? data.trip : t));
         setSelectedTrip(data.trip);
+
+        if (data.whatsappPayload) {
+          if (data.whatsappPayload.type === 'completed' && data.whatsappPayload.chaseNotification) {
+            const isUserLead = (data.trip.clientDriverName || '').toLowerCase() === (user?.name || '').toLowerCase();
+            const target = isUserLead ? data.whatsappPayload.chaseNotification : data.whatsappPayload.leadNotification;
+            setWhatsAppPromptModal({
+              title: '🏁 Trip Finalized & Locked',
+              description: `Trip #${data.trip.invoiceNumber} is completed. Dispatch completion splits to co-driver:`,
+              recipientName: target.recipientName,
+              url: target.url,
+              text: target.text,
+              buttonText: `💬 Send Split Summary to ${target.recipientName} on WhatsApp`
+            });
+          } else if (data.whatsappPayload.url) {
+            setWhatsAppPromptModal({
+              title: data.whatsappPayload.type === 'accepted' ? 'Trip Assignment Confirmed 🤝' : 'Trip Assignment Declined ✕',
+              description: data.whatsappPayload.type === 'accepted'
+                ? `You confirmed this trip. Notify ${data.whatsappPayload.recipientName} via WhatsApp:`
+                : `You declined this trip. Alert ${data.whatsappPayload.recipientName} via WhatsApp:`,
+              recipientName: data.whatsappPayload.recipientName,
+              url: data.whatsappPayload.url,
+              text: data.whatsappPayload.text,
+              buttonText: `💬 Notify ${data.whatsappPayload.recipientName} on WhatsApp`
+            });
+          }
+        }
       } else {
         showToast(data.message || 'Failed to update trip status', 'error');
       }
     } catch (err) {
       showToast('Failed to update trip status', 'error');
     }
-  }, [token, showToast]);
+  }, [token, user, showToast]);
 
   // Trips: Save / Record Extra Costs (Fuel, Tolls, Wash, etc.)
   const handleSaveExtraCosts = useCallback(async (tripId, extraCosts) => {
@@ -415,7 +451,7 @@ export default function Home() {
     }
   }, [token, showToast]);
 
-  // Trips: Create New Trip
+  // Trips: Create New Trip (Initial Status: Pending)
   const handleCreateTrip = useCallback(async (tripData) => {
     try {
       const res = await fetch('/api/trips', {
@@ -429,9 +465,20 @@ export default function Home() {
       const data = await res.json();
 
       if (data.success && data.trip) {
-        showToast('Trip logged successfully!');
+        showToast('Trip logged as Pending! WhatsApp dispatch ready.');
         setTrips(prev => [data.trip, ...prev]);
         setActiveModal(null);
+
+        if (data.whatsappDispatch) {
+          setWhatsAppPromptModal({
+            title: '🚗 Secondary Driver Assigned',
+            description: `Trip #${data.trip.invoiceNumber} is created in Pending status. Dispatch WhatsApp assignment link to ${data.whatsappDispatch.recipientName}:`,
+            recipientName: data.whatsappDispatch.recipientName,
+            url: data.whatsappDispatch.url,
+            text: data.whatsappDispatch.text,
+            buttonText: `💬 Send WhatsApp Dispatch to ${data.whatsappDispatch.recipientName}`
+          });
+        }
         return true;
       } else {
         showToast(data.message || 'Failed to log trip', 'error');
@@ -506,8 +553,10 @@ export default function Home() {
       // 1. Category Filter
       if (filter === 'take_me_home' && trip.type !== 'take_me_home') return false;
       if (filter === 'chauffeur' && trip.type !== 'chauffeur') return false;
-      if (filter === 'completed' && isTripCancelledOrPaused(trip.status)) return false;
-      if (filter === 'deferred' && !isTripCancelledOrPaused(trip.status)) return false;
+      if (filter === 'pending' && (trip.status || 'pending') !== 'pending') return false;
+      if (filter === 'confirmed' && trip.status !== 'confirmed') return false;
+      if (filter === 'completed' && trip.status !== 'completed') return false;
+      if (filter === 'deferred' && !isTripCancelledOrPaused(trip.status) && trip.status !== 'declined') return false;
 
       // 2. Search Query Filter
       if (searchQuery.trim()) {
@@ -671,6 +720,53 @@ export default function Home() {
 
       {/* 7. Toast Alerts */}
       <ToastContainer toasts={toasts} />
+
+      {/* 8. WhatsApp Dispatch Modal Prompt */}
+      {whatsAppPromptModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-xl animate-fade-in">
+          <div className="w-full max-w-md bg-slate-900 border-2 border-emerald-500/50 rounded-3xl p-6 sm:p-7 space-y-4 shadow-2xl animate-scale-up">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-2xl shrink-0">
+                💬
+              </div>
+              <div>
+                <h3 className="text-base font-black text-white">{whatsAppPromptModal.title}</h3>
+                <span className="text-[10px] text-emerald-400 uppercase font-black tracking-wider">
+                  WhatsApp Alert Ready
+                </span>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed">
+              {whatsAppPromptModal.description}
+            </p>
+
+            <div className="p-3.5 rounded-2xl bg-slate-950 border border-white/10 text-xs font-mono text-slate-300 whitespace-pre-wrap max-h-36 overflow-y-auto">
+              {whatsAppPromptModal.text}
+            </div>
+
+            <div className="space-y-2 pt-2">
+              <a
+                href={whatsAppPromptModal.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setWhatsAppPromptModal(null)}
+                className="w-full py-3.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm tracking-wide shadow-xl shadow-emerald-500/30 active:scale-95 transition-all flex items-center justify-center gap-2"
+              >
+                <span>{whatsAppPromptModal.buttonText || `💬 Open WhatsApp for ${whatsAppPromptModal.recipientName}`}</span>
+              </a>
+
+              <button
+                type="button"
+                onClick={() => setWhatsAppPromptModal(null)}
+                className="w-full py-2.5 text-xs text-slate-400 hover:text-white transition-colors"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }
